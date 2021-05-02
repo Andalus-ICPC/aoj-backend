@@ -10,7 +10,7 @@ from authentication.validators import validate_testcase_in_file_extension, valid
     validate_problem_file_extension
 from django.core.exceptions  import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
-import  os, sys, requests
+import  os, sys, requests, shutil
 from zipfile import ZipFile, BadZipFile
 from io import BytesIO
 from django.db import IntegrityError
@@ -142,12 +142,14 @@ def delete_problem(request, problem_id):
 @admin_auth_and_problem_exist
 def delete_problem_done(request, problem_id):
     problem = Problem.objects.get(pk=problem_id)
-    test_case = TestCase.objects.filter(problem=problem)
-    for i in test_case:
-        os.system('rm '+i.input.path) 
-        os.system('rm '+i.output.path) 
-    os.system('rm -R '+problem.pdf.path) 
-
+    # test_case = TestCase.objects.filter(problem=problem)
+    # for i in test_case:
+    #     os.system('rm '+i.input.path) 
+    #     os.system('rm '+i.output.path) 
+    #os.system('rm -R '+problem.pdf.path) 
+    file_path = os.path.split(problem.pdf.path)[0]
+    if os.path.exists(file_path):
+        shutil.rmtree(file_path)
     problem_include_contest = Contest.objects.filter(problem=problem)
     for contest in problem_include_contest:
         contest.last_update = timezone.now()

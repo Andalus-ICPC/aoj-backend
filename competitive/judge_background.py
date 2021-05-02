@@ -136,14 +136,15 @@ def rank_update(submit):
 
 def testcase_output(result_list, submit):
    result_dict ={0: 'Correct', 2: 'Time Limit Exceeded', 3: 'Time Limit Exceeded',
-                  -1: 'Wrong Answer', 4: 'Memory Limit Exceeded', 5: 'Run Time Error'}
+                  -1: 'Wrong Answer', 4: 'Memory Limit Exceeded', 5: 'Run Time Error', 
+                  7: "No Output"}
 
    testcase_info = {}
    server = submit.server.address
    for test in result_list:
-      cpu_time = test['cpu_time']
+      cpu_time = test['cpu_time']/1000.0
       memory = test['memory']
-      real_time = test['real_time']
+      real_time = test['real_time']/1000.0
       result = result_dict[test['result']]
       testcase_name = test['testcase']
       try:
@@ -209,6 +210,7 @@ def judge_background(submission_id):
          "max_memory": memory_limit,
          "language": submission.language.name,
          "max_output_size": int(submission.problem.max_output_size),
+         "absolute_error": float(submission.problem.error),
       }
       # print(temp_data)
       kwargs['json'] = temp_data
@@ -217,7 +219,7 @@ def judge_background(submission_id):
       
       # print('hello')
       # print(type(judge_server_result))
-      # print(judge_server_result)
+      print(judge_server_result)
       # print(judge_server_result['success'])
       # print()
 
@@ -241,6 +243,9 @@ def judge_background(submission_id):
                break
             elif item['result'] == -1:
                total_result = 'Wrong Answer'
+               break
+            elif item['result'] == 7:
+               total_result = 'No Output'
                break
          submission.result = total_result
          

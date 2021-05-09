@@ -19,13 +19,16 @@ from public.models import Statistics
 from competitive.models import Submit
 from judgeserver.models import JudgeServer
 from judgeserver.views import testcase_transfer_to_server
+from authentication.pagination import pagination
 
 
 @login_required
 @admin_auth
 def problem_list(request):
     total_problems = Problem.objects.all().order_by('pk').reverse()
-    return render(request, 'all_problems.html', {'problem': total_problems, 'pro': 'hover'})
+    total_problems, paginator = pagination(request, total_problems)
+
+    return render(request, 'all_problems.html', {'problem': total_problems, 'paginator': paginator, 'pro': 'hover'})
 
 def addProblem(request):
     if request.method =="POST":
@@ -166,13 +169,18 @@ def delete_problem_done(request, problem_id):
     messages.success(request, "The problem " + problem.title + " was deleted successfully.")
     return redirect('problem_list')
 
-
+def lambda_sort(x):
+    if x.name[1:].isdigit():
+        return int(x.name[1:])
+    else:
+        return x.name[1:].lower()
 
 @login_required   
 @admin_auth_and_problem_exist
 def testcase(request, problem_id):
     problem = Problem.objects.get(pk=problem_id)
-    test_case = TestCase.objects.filter(problem=problem).order_by('name')
+    test_case = TestCase.objects.filter(problem=problem)
+    test_case = sorted(test_case, key=lambda x: lambda_sort(x))
     if request.method == "POST":
         error_list = []
         for i in test_case:
@@ -212,7 +220,9 @@ def testcase(request, problem_id):
         return redirect('testcase', problem_id)
     else:
         form = AddTestcase()
-    return render(request, 'testcase.html', {'form': form, 'title': problem.title, 'test_case': test_case, "problem_id": problem.id, 'pro': 'hover'})
+    
+    test_case, paginator = pagination(request, test_case, 10)
+    return render(request, 'testcase.html', {'form': form, 'title': problem.title, 'test_case': test_case, 'paginator': paginator, "problem_id": problem.id, 'pro': 'hover'})
 
 
 @login_required

@@ -127,6 +127,7 @@
         function cellClick(user_id, problem_id, contest_id){
             $.ajax({ 
                 url:"{% url 'specific_problem_submission' %}",
+                type: "GET",
                 data:{
                     'problem_id': problem_id,
                     'user_id': user_id,

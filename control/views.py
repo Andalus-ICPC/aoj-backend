@@ -6,13 +6,15 @@ from django.contrib import messages
 from control.forms import EditScoreValues, LanguageRegister, EditLanguage
 from control.models import Setting
 from competitive.models import Language
+from authentication.pagination import pagination
 # Create your views here.
 
 @login_required
 @admin_auth
 def score_values(request):
     score_values = Setting.objects.all().order_by('name')
-    return render(request, 'score_values.html', {'score_values': score_values})
+    score_values, paginator = pagination(request, score_values)
+    return render(request, 'score_values.html', {'score_values': score_values, 'paginator': paginator})
 
 @login_required
 @admin_auth
@@ -40,7 +42,8 @@ def edit_score_values(request, score_id):
 @admin_auth
 def language_list(request):
     language_list = Language.objects.all().order_by('name')
-    return render(request, 'language_list.html', {'language_list': language_list})
+    language_list, paginator = pagination(request, language_list)
+    return render(request, 'language_list.html', {'language_list': language_list, 'paginator': paginator})
 
 
 @login_required

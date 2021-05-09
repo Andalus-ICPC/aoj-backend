@@ -33,6 +33,44 @@
         {% endfor %}
     </table>
 
+    <!-- pagination -->
+    {% if problem.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if problem.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if problem.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace request 'page' problem.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:problem.number%}
+                {% if problem.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if problem.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' problem.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if problem.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->
+
+
 </div>
 {% elif request.session.active_contest_contestant %}
     <div class="col-sm-8 col-centered" style="margin-top: 2em;">

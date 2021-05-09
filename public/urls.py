@@ -18,4 +18,5 @@ urlpatterns = [
     path('rejudge/process/', views.ajax_public_rejudge, name='ajax_public_rejudge'),
     path('rejudge/submission-list', views.public_rejudge_submission_list, name='public_rejudge_submission_list'),
     path('submit-with-editor/', views.public_submit_with_editor, name='public_submit_with_editor'),
+    path('submit/language-and-problem/', views.public_ajax_get_language_list, name='public_ajax_get_language_list'),
    ]

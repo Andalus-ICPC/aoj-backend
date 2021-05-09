@@ -11,11 +11,11 @@
 
         <tr>
             <td > <strong>Username: </strong></td>
-            <td > {{submit.user.username}} </td>
+            <td > {{this_submit.user.username}} </td>
         </tr>
         <tr>
             <td > <strong>Submit Real Time: </strong></td>
-            <td > {{submit.submit_time}} </td>
+            <td > {{this_submit.submit_time}} </td>
         </tr>
         <tr>
             <td > <strong>Submit Contest Time: </strong></td>
@@ -23,25 +23,25 @@
         </tr>
         <tr>
             <td > <strong>Result: </strong></td>
-            {% if submit.result == "Correct" %}
-            <td style="color: green;"> {{submit.result}} </td>
-            {%elif submit.result == "Judging"%}
+            {% if this_submit.result == "Correct" %}
+            <td style="color: green;"> {{this_submit.result}} </td>
+            {%elif this_submit.result == "Judging"%}
                 <td style="color:rgb(161, 16, 161);">{{i.result}}</td>
             {% else %}
-            <td style="color: red;"> {{submit.result}} </td>
+            <td style="color: red;"> {{this_submit.result}} </td>
             {% endif %}
         </tr>
         <tr>
             <td > <strong>Contest: </strong></td>
-            <td > {{submit.contest.title}} </td>
+            <td > {{this_submit.contest.title}} </td>
         </tr>
         <tr>
             <td > <strong>Problem: </strong></td>
-            <td > {{submit.problem.title}} </td>
+            <td > {{this_submit.problem.title}} </td>
         </tr>
         <tr>
             <td > <strong>Language: </strong></td>
-            <td > {{submit.language.name}} </td>
+            <td > {{this_submit.language.name}} </td>
         </tr>
 
     </table>
@@ -49,7 +49,7 @@
 
 <div class="col-md-6" style="margin-left: 5%;margin-top: 2%;">
     {% if not submit_file %}
-    <h4> file <small> <u>{{file_name}}</u> </small> is not supported file format for {{submit.language.name}}
+    <h4> file <small> <u>{{file_name}}</u> </small> is not supported file format for {{this_submit.language.name}}
         language</h4>
     {% else %}
     <strong>{{'source code:'|upper}} <u>{{file_name}}</u></strong>
@@ -79,7 +79,7 @@
     <!-- @@@@@@@@@@@@@@@@@ -->
 
     {% if base_page == "admin_base_site.html" %}
-    <a class="btn btn-outline-info" href="{% url 'single_rejudge' submit_id=submit.id %}"
+    <a class="btn btn-outline-info" href="{% url 'single_rejudge' submit_id=this_submit.id %}"
         style="float: right;margin-top:10px;margin-bottom:30px; width: 200px;">rejudge</a>
     {% endif %}
 

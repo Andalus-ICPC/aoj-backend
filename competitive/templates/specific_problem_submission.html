@@ -3,7 +3,7 @@
 {% block title%} Specific Submissions {% endblock %}
 {% block content %}
 {% load static %}
-    {% if not submit %}
+    {% if not submission_list %}
         <div style="margin:2em 10em 0 5em "  id="submission_view">
             <h5 class="ur-card-title" style="font-size: 1.5em;">There is no submission</h5>
         </div>
@@ -13,23 +13,23 @@
             <table class="table table-light" style="margin-top: 4em;">
                 <tr>
                     <td ><strong>user: </strong></td>
-                    <td >{{submit.0.user}}</td>
+                    <td >{{submission_list.0.user}}</td>
                 </tr>
                 <tr>
                     <td ><strong>contest: </strong></td>
-                    <td >{{submit.0.contest}}</td>
+                    <td >{{submission_list.0.contest}}</td>
                 </tr>
                 <tr>
                     <td ><strong>problem: </strong></td>
-                    <td >{{submit.0.problem}}</td>
+                    <td >{{submission_list.0.problem}}</td>
                 </tr>
             </table>
         </div>
         <div class="col-sm-7 col-centered" style="margin-top: 2em;">
-            {% if site_admin_permission %}
-                <a class="btn btn-success" href="{% url 'site_multi_rejudge' submit.0.problem.id contest_id submit.0.user.id %}" style="float: right; width: 200px;color:#fff;">all rejudge</a>
-            {% elif base_page == "admin_base_site.html" %}
-                <a class="btn btn-success" href="{% url 'multi_rejudge' submit.0.problem.id contest_id submit.0.user.id %}" style="float: right; width: 200px;color:#fff;">all rejudge</a>
+            {% if base_page == "admin_base_site.html" %}
+                <a class="btn btn-success" href="{% url 'multi_rejudge' submission_list.0.problem.id contest_id submission_list.0.user.id %}" style="float: right; width: 200px;color:#fff;">all rejudge</a>
+            {% elif site_admin_permission %}
+                <a class="btn btn-success" href="{% url 'site_multi_rejudge' submission_list.0.problem.id contest_id submission_list.0.user.id %}" style="float: right; width: 200px;color:#fff;">all rejudge</a>
             {% endif %}
             <table class="table table-striped" style="margin-top: 4em;"> 
             <thead class="table-info">
@@ -42,7 +42,7 @@
                 <th ><strong>Detail</strong></th>
             </tr>
             </thead>
-            {% for i in submit %}
+            {% for i in submission_list %}
                 <tr>
                     <td >{{i.id}}</td>
                     <td >{{i.contest_time}}</td>
@@ -62,7 +62,44 @@
                 </tr>
             {% endfor %}
             </table>
-        
+                    
+            <!-- pagination -->
+            {% if submission_list.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if submission_list.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if submission_list.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' submission_list.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:submission_list.number%}
+                    {% if submission_list.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if submission_list.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' submission_list.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if submission_list.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->
+
         </div>
     </div>
     {% endif %}

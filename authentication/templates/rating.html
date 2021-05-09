@@ -32,7 +32,43 @@
                     
                 </tr>
             {% endfor %}
-        </table>        
+        </table>   
+        <!-- pagination -->
+        {% if user_rank.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if user_rank.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if user_rank.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' user_rank.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:user_rank.number%}
+                    {% if user_rank.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if user_rank.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' user_rank.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if user_rank.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->        
     </div>
 <div>
 {% endblock %}

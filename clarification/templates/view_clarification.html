@@ -81,9 +81,7 @@
         width: 400px;
         font-size: 20px;
     }
-    .id_question{
-        rows: 10;
-    }
+
 </style>
 <script src="{% static 'ace-builds/src/ace.js' %}" type="text/javascript" charset="utf-8"> </script>
 <script src="{% static 'ace-builds/src/theme-twilight.js' %}" type="text/javascript" charset="utf-8"> </script>
@@ -148,6 +146,43 @@
         {%endfor%}
         </table>
         {% endif %}
+
+        <!-- pagination -->
+        {% if all_clarification.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if all_clarification.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if all_clarification.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_clarification.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:all_clarification.number%}
+                    {% if all_clarification.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if all_clarification.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_clarification.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if all_clarification.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->     
     </div>
 
 </div>

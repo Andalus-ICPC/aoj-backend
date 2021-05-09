@@ -5,31 +5,79 @@
 {% load static %}
 {% load widget_tweaks %}
 
-<div class="col-sm-6 col-centered" style="margin-top: 2em;">
-    <h5 class="ur-card-title" style="font-size: 2em;">problem list</h5>
-    <table class="table table-striped" >
+<div class="card" style="margin-left: 5%;  margin-right: 5%;">
+    <div class="card-header" style="font-size: 18px;"> 
+        <strong>{{'problem list'|upper}}</strong> 
+   
+    </div>
+ 
+    <table >
         <thead class="table-info">
             <tr>
-                <th ><strong>id</strong></th>
-                <th ><strong>short name</strong></th>
-                <th ><strong>title</strong></th>
+                <th ><strong>No.</strong></th>
+                <th ><strong>Title of problem</strong></th>
+                <th ><strong>Short name</strong></th>
+                <th ><strong>Point</strong></th>
                 <th ><strong>time limit</strong></th>
+                <th ><strong>memory limit</strong></th>
+                <th ><strong>ballon color</strong></th>
+                <th ><strong>allow public</strong></th>
                 <th ><strong>pdf</strong></th>
-            
             </tr>
         </thead>
         {% for i in problem %}
             <tr>
-                <td >{{i.id}}</td>
-                <td >{{i.short_name}}</td>
+                <td >{{forloop.counter}}</td>
                 <td >{{i.title}}</td>
+                <td >{{i.short_name}}</td>
+                <td >{{i.point}}</td>
                 <td >{{i.time_limit}}</td>
-                <td>
-                    <a href="{{i.pdf.url}}" target="_blank" style="margin-right:20px;" title="pdf"> <img src="{% static 'Images/icons/problem.png' %}" height="20" width="20"></a>
+                <td >{{i.memory_limit}}</td>
+                <td ><span style="height: 15px; width: 15px; background-color: '{{i.ballon}}'; 
+                    border-radius:50%; display: inline-block;"></span></td>
+                <td >{{i.is_public}}</td>
+                <td >
+                    <a href="{{i.pdf.url}}" target="_blank" title="pdf"> <img src="{% static 'Images/icons/problem.png' %}" height="20" width="20"></a>
                 </td>
             </tr>
         {% endfor %}
     </table>
+    <!-- pagination -->
+    {% if problem.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if problem.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if problem.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace request 'page' problem.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:problem.number%}
+                {% if problem.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="submission_list-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if problem.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' problem.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if problem.number == paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    <!-- end pagination -->
 </div>
 
 {% endblock %}

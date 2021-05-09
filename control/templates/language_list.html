@@ -21,7 +21,44 @@
                 <td >{{i.extension}}</td>
             </tr>
         {% endfor %}
-    </table>        
+    </table>     
+    
+    <!-- pagination -->
+    {% if language_list.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if language_list.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if language_list.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace request 'page' language_list.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:language_list.number%}
+                {% if language_list.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if language_list.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' language_list.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if language_list.number == paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    <!-- end pagination -->
 </div>
 
 {% endblock %}

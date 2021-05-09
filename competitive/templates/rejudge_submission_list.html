@@ -7,14 +7,26 @@
 
 {% if not submission_list %}
     <div style="margin:2em 10em 0 5em "  id="submission_view">
-        <h5 class="ur-card-title" style="font-size: 1.5em;">There is no submission for contest: {{contest_title}}</h5>
+        <label style="margin: 0 0 20px; font-weight: 300; font-size: 20px; color: #666;">
+            Contest: <strong>{{contest_title}}</strong></label>
+        <label style="margin: 0 80px 20px; font-weight: 300; font-size: 20px; color: #666;">
+            Problem: <strong>{{problem_title}}</strong></label>
+        <label style="margin: 0 80px 20px; font-weight: 300; font-size: 20px; color: #666;">
+            Result: <strong>{{selected_result}}</strong></label> <br>
+        <label style="margin: 0 0 20px; font-weight: 300; font-size: 20px; color: #666;">
+            No submission</label>
     </div>
 {% else %} 
 
 <div class="row">
     <div class="col-md-9" style="margin: 2em 0 0 4em"  id="submission_view">
         <label style="margin: 0 0 20px; font-weight: 300; font-size: 20px; color: #666;">
-            Select submission to rejudge</label>  
+            Contest: <strong>{{contest_title}}</strong></label>
+        <label style="margin: 0 80px 20px; font-weight: 300; font-size: 20px; color: #666;">
+            Problem: <strong>{{problem_title}}</strong></label>
+        <label style="margin: 0 80px 20px; font-weight: 300; font-size: 20px; color: #666;">
+            Result: <strong>{{selected_result}}</strong></label>  
+            
         <button class="btn btn-primary" onclick="startRejudge()" style="float: right; width: 200px;">start rejudging</button> 
             
         <table class="table table-striped">
@@ -45,7 +57,7 @@
                     {%if i.result == 'Correct'%}
                         <td style="color:green;" class="result" id="result-{{i.id}}">{{i.result}}</td>
                     {%elif i.result == "Judging"%}
-                        <td style="color:rgb(161, 16, 161);">{{i.result}}</td>
+                        <td style="color:rgb(161, 16, 161);" id="result-{{i.id}}">{{i.result}}</td>
                     {%else%}
                         <td style="color:red;" class="result" id="result-{{i.id}}">{{i.result}}</td>
                     {%endif%}
@@ -53,15 +65,68 @@
                 </tr>
             {% endfor %}
         </table>
-    
+        
+        <!-- pagination -->
+        {% if submission_list.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if submission_list.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if submission_list.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' submission_list.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:submission_list.number%}
+                    {% if submission_list.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if submission_list.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' submission_list.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if submission_list.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->
+
     </div>
         
+    
     <div class="col-md-2">
+        <div  class="submission-filter" style="margin-top:5em;">
+            <h2>Filter</h2>
+            <h3>By Judge Result</h3>
+            <ul id="result-list">
+                <li id="result-All">
+                    <a href="#"  title="All" onclick="resultFilter('All')">All</a>
+                </li>
+                {% for name in all_results %}
+                    <li id="result-{{name}}">
+                        <a href="#" title="{{name}}" onclick="resultFilter('{{name}}')">{{name}}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
         <div  class="submission-filter" style="margin-top:5em;">
             <h2>Filter</h2>
             <h3>By Problem</h3>
             <ul id="problem-list">
-                <li class="selected" id="problem-0">
+                <li id="problem-0">
                     <a href="#"  title="All" onclick="problemFilter(0)">All</a>
                 </li>
                 {% for id, title in all_problems %}
@@ -75,17 +140,52 @@
 </div>
 {% endif %}
 
-    <script>
+<script>
+    var list = document.getElementById("result-list");
+    var result_items = list.getElementsByTagName("li");
+    var select_result = "result-" + '{{selected_result}}';
+
+    list = document.getElementById("problem-list");
+    var problem_items = list.getElementsByTagName("li");
+    var select_problem = "problem-"+ '{{selected_problem}}';
+
+    for (var i=0; i < result_items.length; ++i){
+        if (result_items[i].id == select_result){
+            result_items[i].className = "selected";
+            break;
+        }
+    }
+    for (var i=0; i < problem_items.length; ++i){
+        if (problem_items[i].id == select_problem){
+            problem_items[i].className = "selected";
+            break;
+        }
+    }
+
+
     function problemFilter(problem_id){
         var list = document.getElementById("problem-list");
         var problem_items = list.getElementsByTagName("li");
         var select_problem = "problem-"+problem_id;
         var contest_id = '{{contest_id}}'
+
+        var result_list = document.getElementById("result-list");
+        var result_list_items = result_list.getElementsByTagName("li");
+        var result_id = "result-All";
+        for (var i=0; i < result_list_items.length; ++i){
+            if (result_list_items[i].className == "selected"){
+                result_id = result_list_items[i].id;
+                break;
+            }
+        }
+        result_id = result_id.replace("result-", '');
+
         $.ajax({
             url: "{% url 'rejudge_submission_filter' %}",
             data: {
                 'problem_id': problem_id,
                 'contest_id': contest_id,
+                'result': result_id,
             },
             success: function (data) {
                 $('#submission_view').html(data);
@@ -100,7 +200,44 @@
             }
         });
     }
-    
+
+    function resultFilter(selected_result){
+        var list = document.getElementById("result-list");
+        var result_items = list.getElementsByTagName("li");
+        var contest_id = '{{contest_id}}'
+
+        var problem_list = document.getElementById("problem-list");
+        var problem_list_items = problem_list.getElementsByTagName("li");
+        var problem_id = "problem-0";
+        for (var i=0; i < problem_list_items.length; ++i){
+            if (problem_list_items[i].className == "selected"){
+                problem_id = problem_list_items[i].id;
+                break;
+            }
+        }
+        problem_id = problem_id.replace("problem-", '');
+
+        $.ajax({
+            url: "{% url 'rejudge_submission_filter' %}",
+            data: {
+                'problem_id': problem_id,
+                'contest_id': contest_id,
+                'result': selected_result,
+            },
+            success: function (data) {
+                $('#submission_view').html(data);
+                for (var i=0; i < result_items.length; ++i){
+                     if (result_items[i].id == "result-" + selected_result){
+                        result_items[i].className = "selected";
+                     }
+                     else{
+                        result_items[i].className = "";
+                     }
+                }
+            }
+        });
+    }
+        
     function selector(submit_id){
         var all_selector = document.getElementById("all-selector");
         var all_lists = document.getElementsByName("_selected_action");
@@ -200,7 +337,7 @@
             success: function(data){
                 var submit_id,total_result, result, result_id, this_row, this_row_result;
                 total_result = data["result"];
-                console.log(total_result);
+                // console.log(total_result);
                 for (i=0; i < total_submit.length; i++){
                     submit_id = total_submit[i];
                     result = total_result[submit_id];
@@ -211,6 +348,8 @@
                     if (result == "Correct"){
                         this_row_result.style.color = "green";
                     }
+                    else if(result == "Judging")
+                        this_row_result.style.color = "#a110a1";
                     else{
                         this_row_result.style.color = "red";
                     }

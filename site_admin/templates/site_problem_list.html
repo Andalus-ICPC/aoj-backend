@@ -19,7 +19,7 @@
                 <th ><strong>Short name</strong></th>
                 <th ><strong>Point</strong></th>
                 <th ><strong>time limit</strong></th>
-                {% comment %} <th ><strong>memory limit</strong></th> {% endcomment %}
+                <th ><strong>memory limit</strong></th>
                 <th ><strong>ballon color</strong></th>
                 <th ><strong>allow public</strong></th>
                 <th ><strong>pdf</strong></th>
@@ -32,9 +32,9 @@
                 <td >{{i.short_name}}</td>
                 <td >{{i.point}}</td>
                 <td >{{i.time_limit}}</td>
-                {% comment %} <td >{{i.memory_limit}}</td> {% endcomment %}
-                <td ><span style="height: 15px; width: 15px; background-color: {{i.ballon}}; 
-                    border-radius:50%; display: inline-block;"></span></td>
+                <td >{{i.memory_limit}}</td>
+                <td ><span style="height: 15px; width: 15px; border-radius:50%; 
+                        display: inline-block; background-color: {{i.ballon}};"></span></td>
                 <td >{{i.is_public}}</td>
                 <td >
                     <a href="{{i.pdf.url}}" target="_blank" title="pdf"> <img src="{% static 'Images/icons/problem.png' %}" height="20" width="20"></a>
@@ -42,6 +42,43 @@
             </tr>
         {% endfor %}
     </table>
+    
+    <!-- pagination -->
+    {% if problem.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if problem.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if problem.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace request 'page' problem.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:problem.number%}
+                {% if problem.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if problem.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' problem.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if problem.number == paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    <!-- end pagination -->      
 </div>
 
 {% endblock %}

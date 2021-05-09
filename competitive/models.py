@@ -14,24 +14,12 @@ result_lists=(('Correct', 'Correct'), ('Time Limit Exceeded', 'Time Limit Exceed
     ('Run Time Error', 'Run Time Error'), ('No Output', 'No Output')
 )
 
-def testcase_output_directory_upload(instance, filename):
-    problem_title = instance.submit.problem.title.replace(' ', '')
-    testcase_title = instance.test_case.name.replace(' ', '')
-    # filename = filename.replace(' ','')
-    return 'file/user_{0}/{1}/{2}/output_{3}.out'.format(instance.submit.user.id, problem_title, instance.submit.id, testcase_title)
-
-
-def testcase_output_path(instance):
-    return "abcd"
-    print('{0}/AOJ/working_space/'.format(instance.submit.server.address))
-    return '{0}/AOJ/working_space/'.format(instance.submit.server.address)
-
+submit_result_list = result_lists + (("Judging", 'Judging'),)
 
 def submit_file_directory_upload(instance, filename):
     problem_title = instance.problem.title.replace(' ', '')
     filename = filename.replace(' ','')
     return 'file/user_{0}/{1}/{2}/{3}'.format(instance.user.id, problem_title, instance.id, filename)
-    # return 'file/user_{0}/{1}/{2}/{3}'.format(instance.user.id, problem_title, time() , filename)
 
 
 class Language(models.Model):
@@ -40,7 +28,7 @@ class Language(models.Model):
     run_command = models.CharField(max_length=300, help_text='use @ to represent file_name with extension and # with out extension')
     extension = models.CharField(max_length=200, blank=True)
     editor_mode = models.CharField(max_length=200, blank=True)
-    # enable = 
+    enable = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -49,12 +37,12 @@ class Language(models.Model):
 class Submit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
-    result = models.CharField(max_length=200, choices=result_lists)
-    language = models.ForeignKey(Language, on_delete=models.CASCADE)
+    result = models.CharField(max_length=200, choices=submit_result_list)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, limit_choices_to={'enable': True})
     submit_file = models.FileField(upload_to=submit_file_directory_upload)
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE, null=True, blank=True)
     submit_time = models.DateTimeField()
-    server = models.ForeignKey(JudgeServer, on_delete=models.CASCADE)
+    server = models.ForeignKey(JudgeServer, on_delete=models.CASCADE, limit_choices_to={'is_enabled': True})
     output_path = models.CharField(max_length=200)
     
     def __str__(self):
@@ -62,8 +50,6 @@ class Submit(models.Model):
    
 
 class TestcaseOutput(models.Model):
-    # output_file = models.FileField(upload_to=testcase_output_directory_upload)
-    # output_file = models.FilePathField(path="/home/andalus")
     test_case = models.ForeignKey(TestCase, on_delete=models.CASCADE)
     submit = models.ForeignKey(Submit, on_delete=models.CASCADE)
     result = models.CharField(max_length=200, choices=result_lists)                                       
@@ -108,7 +94,6 @@ class ScorecacheJury(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     submission = models.PositiveSmallIntegerField(default=0)
     punish = models.PositiveSmallIntegerField(default=0)
-    # pending = models.PositiveSmallIntegerField(default=0)
     correct_submit_time = models.DateTimeField(null=True, blank=True)
     is_correct = models.BooleanField(default=False)
     judging = models.PositiveSmallIntegerField(default=0)

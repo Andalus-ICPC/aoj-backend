@@ -36,6 +36,43 @@
             </table>
             <hr>
         {% endfor %}
+        <!-- pagination -->
+        {% if test_case.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if test_case.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if test_case.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' test_case.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:test_case.number%}
+                    {% if test_case.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="submission_list-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if test_case.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' test_case.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if test_case.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->
+        
 
 
             <table class="table table-light" style="width:100%;">

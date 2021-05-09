@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'jury',
     'public',
     'judgeserver',
+    'site_admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     'datetimewidget',
     'crispy_forms',
     'django_ace',
+
 ]
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 

@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.db import IntegrityError
 from competitive.models import RankcacheJury, RankcachePublic, ScorecacheJury, ScorecachePublic, Submit
 from control.models import Setting
-
+from authentication.pagination import pagination
 
 def time_gap(submit_time, contest_start_time):
     td = submit_time - contest_start_time
@@ -312,31 +312,17 @@ def contest_list(request):
             contest.status = "end"
         else:
             contest.status = "deactivate"
-    return render(request, 'contest_list.html', {'contest': total_contest, 'cont': 'hover'})
 
+    total_contest, paginator = pagination(request, total_contest)
 
-# def contset_session(contest):
-#     user_list = contest.user.all()
-#     for user in user_list:
-#         try:
-#             cont = ContestSession.objects.get(user=user)
-#             if cont.contest == contest:
-#                 continue
-#             cont.contest = contest
-#             cont.save()
-#         except ContestSession.DoesNotExist:
-#             cont = ContestSession(user=user, contest=contest)
-#             cont.save()
+    return render(request, 'contest_list.html', {'contest': total_contest, 'paginator': paginator, 'cont': 'hover'})
+
 
 @login_required
 @admin_or_site_auth
 def addContest(request):
     refresh_contest_session_admin(request)  # refersh the contest session
-    # user_list = [("%s - %s" %(i.campus, i.name), i) for i in User.objects.filter(role__short_name='contestant')]
     user_list = User.objects.filter(role__short_name='contestant').order_by('campus', 'name')
-    # for user in user_list:
-    #     user.name = user.campus.short_name + ' - ' + user.name
-    #     # user.save()
     if request.method == "POST":
         form = AddContest(request.POST)
         form.fields['user'].queryset = user_list
@@ -345,7 +331,6 @@ def addContest(request):
             post.created_by = request.user.campus
             post.save()
             form.save_m2m()
-            # contset_session(post)
             if post.last_update >= post.start_time:
                 post.last_update = post.start_time
                 # post.last_update = post.start_time - 1 # the correct one is this in seyar shop

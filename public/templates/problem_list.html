@@ -11,9 +11,9 @@
         border-color:#B7B8B0;
         
     }
-    {% comment %} td *, td{
+     /* td *, td{
         padding: 10px !important;
-    }  {% endcomment %}
+    }  */
 </style>
 <div class="col-sm-8 col-centered" style="margin-top: 2em;">
     <h5 class="ur-card-title" style="font-size: 2em;float:left;">Problems </h5>
@@ -62,7 +62,42 @@
             </tr>
         {% endfor %}
     </table>
-
+    <!-- pagination -->
+    {% if problem_list.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if problem_list.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if problem_list.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace request 'page' problem_list.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:problem_list.number%}
+                {% if problem_list.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if problem_list.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' problem_list.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if problem_list.number == paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    <!-- end pagination -->   
 </div>
 
 {% endblock %}

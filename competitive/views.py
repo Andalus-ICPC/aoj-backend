@@ -33,15 +33,9 @@ from io import BytesIO
 from problem.views import update_statistics
 import requests
 from .judge_background import judge_background
-
-# from asgiref.sync import async_to_sync
-
 from contest.views import rank_update_unfrozen, create_contest_session_admin, create_contest_session_contestant,\
     refresh_contest_session_admin, refresh_contest_session_contestant, refresh_contest_session_public
-# from competitive.models import Rankcache_user_public, Rankcache_team_public, Rankcache_user_jury, Rankcache_team_jury,\
-#         Scorecache_user_jury, Scorecache_team_jury,Scorecache_user_public, Scorecache_team_public
-# from contest.views import user_score_and_rank, team_score_and_rank
-
+from authentication.pagination import pagination
 
 def time_gap(submit_time, contest_start_time):
     td = submit_time - contest_start_time
@@ -91,7 +85,8 @@ def problem_lists(request):
         start_time = None
 
     problem = sorted(problem, key=lambda x: x.title.lower())
-    return {'problem': problem, 'contest_title': contest_title, 'start_time': start_time, 'pro': 'hover'}
+    problem, paginator = pagination(request, problem)
+    return {'problem': problem, 'paginator': paginator, 'contest_title': contest_title, 'start_time': start_time, 'pro': 'hover'}
 
 
 @login_required
@@ -100,195 +95,6 @@ def active_contest_problem(request):
     refresh_contest_session_contestant(request)  # refersh the contest session
     data = problem_lists(request)
     return render(request, 'problem.html', data)
-
-
-def convert_to_command(file_name, filename_without_extension, command):
-    command = command.replace('#', filename_without_extension)
-    command = command.replace('@', file_name)
-    return command
-
-
-def check_absolute_error(correct_answer_list, user_answer_list, error):
-    if correct_answer_list and not user_answer_list:
-        return 'No Output'
-    if len(correct_answer_list) != len(user_answer_list):
-        return 'Wrong Answer'
-    for testcase_line, user_line in zip(correct_answer_list, user_answer_list):
-        correct_line = testcase_line.split()
-        user_answer_line = user_line.split()
-        if len(correct_line) != len(user_answer_line):
-            return 'Wrong Answer'
-        for each_correct_answer, each_user_answer in zip(correct_line, user_answer_line):
-            if each_correct_answer == each_user_answer:
-                continue
-            try:
-                each_correct_answer = float(each_correct_answer)
-                each_user_answer = float(each_user_answer)
-            except ValueError:
-                return 'Wrong Answer'
-            if math.fabs(each_correct_answer - each_user_answer) > error:
-                return 'Wrong Answer'
-
-    return 'Correct'
-
-# it must be update for the future work example use diff command
-
-
-def check_answer(correct_answer_file, user_answer_file, error):
-    # if error:
-    #     return check_absolute_error(correct_answer_list, user_answer_list, error)
-    # else:
-    #     signal = os.system("diff {} {}".format(correct_answer_file, user_answer_file))
-    #     if signal == 0:
-    #         return 'Correct'
-    #     elif signal == 256:
-    #         return 'Wrong Answer'
-
-    correct_answer = open(correct_answer_file, 'r')
-    user_answer = open(user_answer_file, 'r')
-    correct_answer_list = []
-    user_answer_list = []
-    for j in correct_answer:
-        x = j.rstrip()
-        correct_answer_list.append(x)
-    for j in user_answer:
-        x = j.rstrip()
-        user_answer_list.append(x)
-    while correct_answer_list:
-        if correct_answer_list[-1]:
-            break
-        correct_answer_list.pop()
-
-    while user_answer_list:
-        if user_answer_list[-1]:
-            break
-        user_answer_list.pop()
-    correct_answer.close()
-    user_answer.close()
-    if error:
-        return check_absolute_error(correct_answer_list, user_answer_list, error)
-    else:
-        if correct_answer_list and not user_answer_list:
-            return 'No Output'
-        elif correct_answer_list == user_answer_list:
-            return 'Correct'
-        else:
-            return 'Wrong Answer'
-
-# import platform
-# platform.system()
-
-
-def execute(cmd):
-    os.system(cmd)
-
-
-def run(command, input_file_path, output_file_path, time_limit_bound):
-    cmd = command + "<" + input_file_path + ">" + output_file_path
-    start_time = time.clock()
-    signal = os.system("timeout -s SIGKILL -k %ds %ds %s" %
-                       (time_limit_bound * 2, time_limit_bound, cmd))
-    end_time = time.clock()
-    if signal == 256:
-        return ("Run Time Error", 0.0)
-    elif signal == 35072:
-        return ('Time Limit Exceeded', time_limit_bound)
-    elif signal == 0:
-        return ('Correct', end_time - start_time)
-
-
-def compile(command):
-    failure = subprocess.call(command, shell=True)
-    if failure:
-        return False
-    return True
-
-
-def judge(file_name, problem, language, submit, rejudge=False):
-    if not os.path.exists(file_name):
-        raise PermissionDenied
-    without_extension = file_name
-    try:
-        index = without_extension[::-1].index('.')
-        try:
-            slash_index = without_extension[::-1].index('/')
-            if index < slash_index:
-                without_extension = without_extension[::-1][index+1:][::-1]
-        except Exception:
-            without_extension = without_extension[::-1][index+1:][::-1]
-    except Exception:
-        pass
-    compile_command = language.compile_command
-    run_command = language.run_command
-    new_compile_command = convert_to_command(
-        file_name=file_name, command=compile_command, filename_without_extension=without_extension)
-    new_run_command = convert_to_command(
-        file_name=file_name, command=run_command, filename_without_extension=without_extension)
-    if language.name == 'Java':
-        new_run_command = (new_run_command[::-1].replace('/', ' ', 1))[::-1]
-    result = compile(command=new_compile_command)
-    if not result:
-        return 'Compiler Error'
-    test_cases = [i for i in TestCase.objects.filter(
-        problem=problem).order_by('name')]
-    time_limit = float(problem.time_limit)
-
-    submit_result = "Correct"
-    for each in test_cases:
-        input_file = each.input
-        output_file = each.output
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        user_output_text_path = os.path.join(
-            BASE_DIR, 'static/testcase_output.out')
-        if rejudge:
-            try:
-                # for all except compiler error and run time error
-                insert = TestcaseOutput.objects.get(
-                    submit=submit, test_case=each)
-            except TestcaseOutput.DoesNotExist:
-                try:
-                    user_output = File(open(user_output_text_path, 'r'))
-                    insert = TestcaseOutput(
-                        output_file=user_output, test_case=each, submit=submit)
-                    insert.save()
-                except IntegrityError:
-                    pass
-        else:
-            try:
-                # user_output = File(open(user_output_text_path, 'r'))
-                # insert = TestcaseOutput(
-                #     output_file=user_output, test_case=each, submit=submit)
-                insert = TestcaseOutput(test_case=each, submit=submit)
-                  
-                insert.save()
-            except IntegrityError:
-                pass
-        testcase_input_file_path = input_file.path
-        user_output_file_path = insert.output_file.path
-        testcase_output_file_path = output_file.path
-        result, execute_time = run(command=new_run_command, input_file_path=testcase_input_file_path,
-                                   output_file_path=user_output_file_path, time_limit_bound=time_limit)
-        insert.execution_time = execute_time
-        if result == "Run Time Error":
-            insert.result = "Run Time Error"
-            insert.save()
-            return "Run Time Error"
-        elif result == 'Time Limit Exceeded':
-            insert.result = 'Time Limit Exceeded'
-            insert.save()
-            return 'Time Limit Exceeded'
-        result = check_answer(correct_answer_file=testcase_output_file_path,
-                              user_answer_file=user_output_file_path, error=problem.error)
-        insert.result = result
-        insert.save()
-        if result == 'Correct':
-            continue
-        elif result == "Wrong Answer":
-            submit_result = "Wrong Answer"
-        else:
-            return result
-    # print(submit.id, submit_result)
-    return submit_result
 
 
 def read_source_code(files):
@@ -492,105 +298,11 @@ def judge_rank_update(submit):
         score_cache_public.judging += 1
         score_cache_public.save()
 
-# @login_required
-# @contestant_auth
-# # @async_to_sync
-# #   TODO: add a text editor to submit
-# def submit(request):
-#     refresh_contest_session_contestant(request)  # refersh the contest session
-#     current_contest_id = request.session.get('start_contest_contestant')
-#     problem_list = None
-#     all_current_contest_submits = []
-#     try:
-#         current_contest = Contest.objects.get(
-#             pk=current_contest_id, start_time__lte=timezone.now(), enable=True)
-#     except Contest.DoesNotExist:
-#         current_contest = None
-#     if current_contest:
-#         problem_list = current_contest.problem.all().order_by('short_name')
-#         if request.method == "POST":
-#             form = SubmitAnswer(request.POST, request.FILES)
-#             form.fields['problem'].queryset = problem_list
-#             if form.is_valid():
-#                 post = form.save(commit=False)
-#                 post.submit_time = timezone.now()
-#                 post.user = request.user
-
-#                 post.contest_id = current_contest_id
-#                 post.submit_file = None
-#                 post.save()
-#                 post.submit_file = request.FILES.get('submit_file')
-#                 post.save()
-
-#                 result = judge(file_name=post.submit_file.path,
-#                                problem=post.problem, language=post.language, submit=post)
-#                 post.result = result
-#                 post.save()
-#                 this_contest = post.contest
-#                 this_contest.last_update = timezone.now()
-#                 this_contest.save()
-
-#                 rank_update(post)
-#                 update_statistics(post)
-#                 return redirect('submit')
-#         else:
-#             form = SubmitAnswer()
-#             form.fields['problem'].queryset = problem_list
-        
-#         form1 = SubmitWithEditor()
-#         form1.fields['problem'].choices = [(None, '----------')] + [(i.id, i) for i in problem_list]
-#         form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.all()]
-
-#     else:
-#         form = None
-#         form1 = None
-
-#     q = Q(problem=None)
-#     if current_contest:
-#         for pro in current_contest.problem.all():
-#             q = q | Q(problem=pro)
-#         all_current_contest_submits = Submit.objects.filter(
-#             q, contest_id=current_contest_id, user=request.user).order_by('submit_time').reverse()
-#         start_time = current_contest.start_time
-#         for i in all_current_contest_submits:
-#             if i.submit_time > current_contest.end_time:
-#                 i.result = 'Too Late'
-#             i.contest_time = i.submit_time - start_time
-#             i.source_code = read_source_code(i.submit_file)
-#             i.language_mode = i.language.editor_mode
-
-#         a = [i for i in all_current_contest_submits]
-#         ls = []
-#         for i in a:
-#             ls.append((i.pk, str(i.submit_file)))
-#     else:
-#         all_current_contest_submits = None
-#         ls = []
-#     qs_json = json.dumps(ls)
-
-#     try:
-#         active_contest = Contest.objects.get(pk=request.session.get(
-#             'active_contest_contestant'), active_time__lte=timezone.now(), enable=True)
-#         contest_title = active_contest.title
-#         start_time = active_contest.start_time
-#     except Contest.DoesNotExist:
-#         contest_title = None
-#         start_time = None
-    
-#     return render(request, 'submit.html',
-#                   {'form': form, 'form1': form1, 'all_current_contest_submits': all_current_contest_submits,
-#                    'current_contest': current_contest, 'qs_json': qs_json,
-#                    'contest_title': contest_title, 'start_time': start_time, 'submit': 'hover'
-#                    }
-#                   )
-
-
 
 @login_required
 @contestant_auth
-# @async_to_sync
 def submit(request):
-    refresh_contest_session_contestant(request)  # refersh the contest session
+    refresh_contest_session_contestant(request) 
     current_contest_id = request.session.get('start_contest_contestant')
     problem_list = None
     all_current_contest_submits = []
@@ -606,22 +318,6 @@ def submit(request):
             form = SubmitAnswer(request.POST, request.FILES)
             form.fields['problem'].queryset = problem_list
             if form.is_valid():
-                # user_id = request.user
-                # language = 'cpp'
-                # code = request.FILES.get('submit_file')
-                # contest_id = current_contest_id
-                # submission = Submit()
-                # post = form.save(commit=False)
-                
-                # submission.submit_time = timezone.now()
-                # submission.user = request.user
-                # submission.contest_id = current_contest_id
-                # submission.problem = post.problem
-                # submission.language = post.language
-                # submission.submit_file = request.FILES.get('submit_file')
-                # submission.result = 'Judging'
-                # submission.save()
-
                 post = form.save(commit=False)
                 post.submit_time = timezone.now()
                 post.user = request.user
@@ -634,96 +330,21 @@ def submit(request):
                 post.result = 'Judging'
                 post.save()
                 
-                try:
-                    judge_rank_update(post)
-                    judge_background.apply_async([post.id])
-
-                except Exception:
-                    result = judge(file_name=post.submit_file.path,
-                                problem=post.problem, language=post.language, submit=post)
-                    post.result = result
-                    post.save()
-                    rank_update(post)
-                    update_statistics(post)
-
-
-                # # multiprocessing
-                # # pool = multiprocessing.Pool(processes=4)
-                # # pool.map(judge(file_name=post.submit_file.path, problem=post.problem, language=post.language, submit=post), request)
-                # try:
-                #     url="http://127.0.0.1:5000/judge"
-                #     with open(post.submit_file.path, 'r') as f:
-                #         content = f.read()
-                #     # kwargs = {"headers": {"X-Judge-Server-Token": 'amir'}}
-                #     kwargs = {}
-                #     temp_data= {
-                #         # "headers": {"X-Judge-Server-Token": 'amir'},
-                #         "src_code": content,
-                #         "testcase_id": '01',
-                #         "max_cpu_time": 12,
-                #         "max_real_time": 1000,
-                #         "language": "cpp"
-                #     }
-                #     kwargs['json'] = temp_data
-                #     post.result = 'Judging'
-                #     post.save()
-                #     judge_server_result = requests.get(url, **kwargs).json()['data']
-                    
-
-                #     total_result = 'Correct'
-                #     print(type(judge_server_result))
-                #     print(judge_server_result)
-                #     print()
-                #     print()
-
-                #     for item in judge_server_result:
-                #         if item['result'] == 2:
-                #             total_result = 'Time Limit Exceeded'
-                #             break
-                #         elif item['result'] == -1:
-                #             total_result = 'Wrong Answer'
-                #             break
-                #     post.result = total_result
-                # except Exception as e:
-                #     result = judge(file_name=post.submit_file.path,
-                #                 problem=post.problem, language=post.language, submit=post)
-                #     post.result = result
-
-                # # post.result = result
-                # post.save()
-                # this_contest = post.contest
-                # this_contest.last_update = timezone.now()
-                # this_contest.save()
-
-                # rank_update(post)
-                # output_files = TestcaseOutput.objects.filter(submit = post)
-                # for i in output_files:
-                #     if i.result == "Correct":
-                #         continue
-                #     else:
-                #         if i.output_file.size > 2 * i.test_case.output.size:
-                #             os.system('rm '+i.output_file.path)
-                #             os.system('touch '+i.output_file.path)
-                # if this_contest.has_value:
-                #     give_score(post, request)
+                judge_rank_update(post)
+                judge_background.apply_async([post.id])
 
                 this_contest = post.contest
                 this_contest.last_update = timezone.now()
                 this_contest.save()
 
-                # rank_update(post)
-                # update_statistics(post)
                 return redirect('submit')
-            # else:
-            #     form = SubmitAnswer()
-
         else:
             form = SubmitAnswer()
             form.fields['problem'].queryset = problem_list
         
         form1 = SubmitWithEditor()
         form1.fields['problem'].choices = [(None, '----------')] + [(i.id, i) for i in problem_list]
-        form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.all()]
+        form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.filter(enable=True)]
 
     else:
         form = None
@@ -766,20 +387,20 @@ def submit(request):
     else:
         self_scoreboard = []
         total_problems = []
-    return render(request, 'submit.html',
-                  {'form': form, 'form1': form1, 'all_current_contest_submits': all_current_contest_submits,
-                   'current_contest': current_contest, 'qs_json': qs_json,
-                   'contest_title': contest_title, 'start_time': start_time,
-                   'self_scoreboard': self_scoreboard, 'total_problems': total_problems, 'submit': 'hover'
-                   }
-                  )
 
+    all_current_contest_submits, paginator = pagination(request, all_current_contest_submits)
+    context = {'form': form, 'form1': form1, 'all_current_contest_submits': all_current_contest_submits,
+                'current_contest': current_contest, 'qs_json': qs_json, 'contest_title': contest_title, 
+                'start_time': start_time, 'self_scoreboard': self_scoreboard, 'submit': 'hover',
+                'total_problems': total_problems, 'paginator': paginator,
+                }
+    return render(request, 'submit.html', context)
+                  
 
 @login_required
 @contestant_auth
-def public_submit_editor(request):
-
-    refresh_contest_session_contestant(request)  # refersh the contest session
+def submit_editor(request):
+    refresh_contest_session_contestant(request) 
     current_contest_id = request.session.get('start_contest_contestant')
     problem_list = None
     all_current_contest_submits = []
@@ -793,7 +414,7 @@ def public_submit_editor(request):
         if request.method == "POST":
             form1 = SubmitWithEditor(request.POST, request.FILES)
             form1.fields['problem'].choices = [(None, '----------')] + [(i.id, i) for i in problem_list]
-            form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.all()]
+            form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.filter(enable=True)]
 
             if form1.is_valid():
                 post = Submit()
@@ -819,13 +440,11 @@ def public_submit_editor(request):
                 code = open(path, 'w')
                 code.write(source)
                 code.close()
-                # print(source)
                 code = open(path, 'rb')
                 source_code = code.read()
                 code.close()
                 submit_file = InMemoryUploadedFile(BytesIO(source_code), 'file', path, 'file/text', sys.getsizeof(source_code), None)
                 post.submit_file = submit_file
-                # post.save()
                 
                 post.result = 'Judging'
                 post.save()
@@ -833,21 +452,16 @@ def public_submit_editor(request):
                 judge_rank_update(post)
                 judge_background.apply_async([post.id])
 
-                # result = judge(file_name=post.submit_file.path,
-                #                problem=post.problem, language=post.language, submit=post)
-                # post.result = result
-                # post.save()
                 this_contest = post.contest
                 this_contest.last_update = timezone.now()
                 this_contest.save()
                 os.system(f'rm "{path}"')
-                # rank_update(post)
-                # update_statistics(post)
+
                 return redirect('submit')
         else:
             form1 = SubmitWithEditor()
             form1.fields['problem'].choices = [(None, '----------')] + [(i.id, i) for i in problem_list]
-            form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.all()]
+            form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.filter(enable=True)]
 
         form = SubmitAnswer()
         form.fields['problem'].queryset = problem_list
@@ -895,67 +509,14 @@ def public_submit_editor(request):
         self_scoreboard = []
         total_problems = []
 
-    return render(request, 'submit.html',
-                  {'form': form, 'form1': form1, 'all_current_contest_submits': all_current_contest_submits,
-                   'current_contest': current_contest, 'qs_json': qs_json,
-                   'contest_title': contest_title, 'start_time': start_time,
-                   'self_scoreboard': self_scoreboard, 'total_problems': total_problems, 'submit': 'hover'
-                   }
-                  )
-
-    ################################
-    # problem_list = Problem.objects.filter(is_public=True).order_by('title')
-    # if request.method == "POST":
-    #     form1 = SubmitWithEditor(request.POST)
-    #     form1.fields['problem'].choices = [(None, '----------')]  + [(i.id, i) for i in problem_list]
-    #     form1.fields['language'].choices =[(None, '----------')]  + [(i.id, i) for i in Language.objects.all()]
-    #     if form1.is_valid():
-    #         # print(123)
-    #         post = Submit()
-    #         now = timezone.now()
-    #         post.submit_time = now
-    #         post.user = request.user
-    #         lang = Language.objects.get(pk=int(request.POST['language']))
-    #         post.language = lang
-    #         pro =  Problem.objects.get(pk=int(request.POST['problem']))
-    #         post.problem = pro
-    #         post.submit_file = None
-    #         post.save()
-
-    #         source = request.POST['source']
-    #         path = pro.title + request.user.username + str(now) +'.' + lang.extension
-    #         code = open(path, 'w')
-    #         code.write(source)
-    #         code.close()
-    #         # print(source)
-    #         code = open(path, 'rb')
-    #         source_code = code.read()
-    #         code.close()
-    #         submit_file = InMemoryUploadedFile(BytesIO(source_code), 'file', path, 'file/text', sys.getsizeof(source_code), None)
-    #         post.submit_file = submit_file
-    #         post.save()
-    #         # print(post.submit_file)
-    #         result = judge(file_name=post.submit_file.path,
-    #                        problem=post.problem, language=post.language, submit=post)
-    #         post.result = result
-    #         # print(result)
-    #         post.save()
-    #         os.system(f'rm "{path}"')
-    #         update_statistics(post)
-    #         return redirect('public_submit')
-    # else:
-    #     form1 = SubmitWithEditor()
-    #     form1.fields['problem'].choices = [(None, '----------')]  +  [(i.id, i) for i in problem_list]
-    #     form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.all()]
-
-    # all_submits = Submit.objects.filter(
-    #     user=request.user).order_by('submit_time').reverse()
-    # for i in all_submits:
-    #     i.source_code = read_source_code(i.submit_file)
-    #     i.language_mode = i.language.editor_mode
-    # form = SubmitAnswer()
-    # form.fields['problem'].queryset = problem_list
-    # return render(request, 'submit.html', {'form': form, 'form1':form1, 'all_submits': all_submits})
+    all_current_contest_submits, paginator = pagination(request, all_current_contest_submits)
+    context = {'form': form, 'form1': form1, 'current_contest': current_contest, 
+                'qs_json': qs_json,  'all_current_contest_submits': all_current_contest_submits,
+                'contest_title': contest_title, 'start_time': start_time, 'submit': 'hover',
+                'self_scoreboard': self_scoreboard, 'total_problems': total_problems,
+                'paginator': paginator,
+               }
+    return render(request, 'submit.html', context)
 
 
 def scoreboard_summary(contest, scoreboard_type):
@@ -1166,7 +727,6 @@ def public_scoreboard(request):
         base_page = "contestant_base_site.html"
         role = "contestant"
     else:
-        # refresh public contest session
         refresh_contest_session_public(request)
         contest_id = request.session.get('start_contest_public')
         base_page = "public_scoreboard_base_site.html"
@@ -1311,7 +871,7 @@ def ajax_get_language_list(request):
     except Contest.DoesNotExist:
         contest = None
     language_list = [(lang.id, lang.extension)
-                     for lang in Language.objects.all().order_by('name').reverse()]
+                     for lang in Language.objects.filter(enable=True).order_by('name').reverse()]
     problem_list = [(pro.id, pro.title.lower(), pro.short_name.lower())
                     for pro in contest.problem.all()]
     response_data = {"language_list": language_list,
@@ -1456,10 +1016,14 @@ def view_submit_contest_select(request):
             contest.status = "end"
         else:
             contest.status = "deactivate"
+    
+    all_contest, paginator = pagination(request, all_contest)
+
     base_page = check_base_site(request)
     context = {
         'all_contest': all_contest,
         'base_page': base_page,
+        'paginator': paginator,
         'submit': 'hover'
     }
     return render(request, 'view_submit_select_contest.html', context)
@@ -1468,22 +1032,54 @@ def view_submit_contest_select(request):
 @login_required
 @admin_site_jury_auth_and_contest_exist
 def view_submissions(request, contest_id):
+    problem_id = request.GET.get('problem_id', 0)
+    result = request.GET.get('result', "All")
+
     refresh_contest_session_admin(request)  # refersh the contest session
     contest = Contest.objects.get(pk=contest_id)
+    
+    try:
+        problem_id = int(problem_id)
+    except ValueError:
+        return redirect('homepage')
 
-    submission_list = Submit.objects.filter(
+    if not problem_id == 0:
+        try:
+            problem_title = Problem.objects.get(pk=problem_id).title
+        except Problem.DoesNotExist:
+            problem_title = None
+    else:
+        problem_title = "All problems"
+        
+    all_submission = Submit.objects.filter(
         contest=contest).order_by('submit_time').reverse()
-    base_page = check_base_site(request)
+    
     all_problems = set()
-    for submit in submission_list:
+    for submit in all_submission:
         pro = (submit.problem.id, submit.problem.title)
         all_problems.add(pro)
     all_problems = sorted(all_problems, key=lambda x: x[1].lower())
+
+    submission_list = all_submission
+    if problem_id:
+        submission_list = submission_list.filter(problem_id=problem_id)
+
+    if not result == "All":
+        submission_list = submission_list.filter(result=result)
+
     start_time = contest.start_time
     for i in submission_list:
         i.contest_time = i.submit_time - start_time
-    context = {'submission_list': submission_list, "contest_title": contest.title, 'base_page': base_page,
-               'all_problems': all_problems, 'contest_id': contest_id, 'submit': 'hover'
+    all_results = ['Correct', 'Wrong Answer', 'Judging', 'Time Limit Exceeded', 'Run Time Error',  
+                    'Compiler Error', 'Memory Limit Exceeded', 'No Output']
+    
+    submission_list, paginator = pagination(request, submission_list)
+
+    base_page = check_base_site(request)
+    context = {'submission_list': submission_list, "contest_title": contest.title,
+               'all_problems': all_problems, 'contest_id': contest_id, 'paginator': paginator,
+               'all_results': all_results, "selected_problem": problem_id, "problem_title": problem_title,
+               'selected_result': result, 'base_page': base_page, 'submit': 'hover'
                }
     return render(request, 'view_submission.html', context)
 
@@ -1492,25 +1088,52 @@ def view_submissions(request, contest_id):
 # @admin_or_jury_auth
 @admin_site_jury_auth
 def view_submission_filter(request):
-    refresh_contest_session_admin(request)  # refersh the contest session
-    problem_id = int(request.GET.get('problem_id'))
-    contest_id = int(request.GET.get('contest_id'))
+    # refresh_contest_session_admin(request)  # refersh the contest session
     try:
-        problem_title = Problem.objects.get(pk=problem_id).title
-    except Problem.DoesNotExist:
-        problem_title = None
+        problem_id = int(request.GET.get('problem_id'))
+        contest_id = int(request.GET.get('contest_id'))
+    except ValueError:
+        return redirect('homepage')
+
+    result = request.GET.get('result')
+
+    try:
+        contest = Contest.objects.get(pk=contest_id)
+    except Contest.DoesNotExist:
+        return redirect('homepage')
+
+    if not problem_id == 0:
+        try:
+            problem_title = Problem.objects.get(pk=problem_id).title
+        except Problem.DoesNotExist:
+            problem_title = None
+
     if problem_id == 0:
-        all_submissions = Submit.objects.filter(
-            contest_id=contest_id).order_by('submit_time').reverse()
-        problem_title = "All problems"
+        if result == "All":
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id).order_by('submit_time').reverse()
+        else:
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, result=result).order_by('submit_time').reverse()
+        problem_title = "All problems"    
     else:
-        all_submissions = Submit.objects.filter(
-            contest_id=contest_id, problem_id=problem_id).order_by('submit_time').reverse()
-    contest = Contest.objects.get(pk=contest_id)
+        if result == "All":
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, problem_id=problem_id).order_by('submit_time').reverse()
+        else:
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, problem_id=problem_id, result=result).order_by('submit_time').reverse()
+
     start_time = contest.start_time
-    for i in all_submissions:
+    for i in submission_list:
         i.contest_time = i.submit_time - start_time
-    return render(request, 'view_submission_filter.html', {'submission_list': all_submissions, 'problem_title': problem_title, 'submit': 'hover'})
+    
+    submission_list, paginator = pagination(request, submission_list)
+    
+    context = {'submission_list': submission_list, 'problem_title': problem_title,
+               'paginator': paginator, 'contest_title': contest.title, 
+               'selected_problem': problem_id, 'selected_result': result, 'submit': 'hover'}
+    return render(request, 'view_submission_filter.html', context)
 
 
 @login_required
@@ -1635,8 +1258,11 @@ def submission_detail(request, submit_id):
             submit_detail.append(
                 (i.id, "Not Run", [], (None, None), (None, None), (None, None), 0, 0))
     base_page = check_base_site(request)
-    context = {'submit': submit, 'submit_file': submit_file, 'language_mode': language_mode, 'file_name': file_name,
-               'submit_detail': submit_detail, 'submit_contest_time': submit_contest_time, 'base_page': base_page}
+    context = {'this_submit': submit, 'submit_file': submit_file, 'language_mode': language_mode, 
+                'file_name': file_name, 'submit_detail': submit_detail, 
+                'submit_contest_time': submit_contest_time, 
+                'submit': 'hover', 'base_page': base_page
+            }
     return render(request, 'submission_detail.html', context)
 
 
@@ -1653,7 +1279,7 @@ def specific_problem_submission(request):
                                                               submit_time__gte=current_contest.start_time, submit_time__lte=current_contest.end_time).order_by('submit_time')
     correct = False
     specific_submissions = list()
-    if current_contest.created_by == request.user.campus:
+    if request.user.role.short_name == "site" and current_contest.created_by == request.user.campus:
         site_admin_permission = True
     else:
         site_admin_permission = False
@@ -1670,12 +1296,16 @@ def specific_problem_submission(request):
     for i in specific_submissions:
         i.contest_time = i.submit_time - start_time
 
+    specific_submissions, paginator = pagination(request, specific_submissions)
+    print(specific_submissions[0])
     base_page = check_base_site(request)
     context = {
-        'submit': specific_submissions, 
+        'submission_list': specific_submissions, 
         'contest_id': contest_id, 
+        'paginator': paginator,
         'site_admin_permission': site_admin_permission,
-        'base_page': base_page
+        'base_page': base_page,
+        'submit': 'hover'
         }
     return render(request, 'specific_problem_submission.html', context)
 
@@ -1701,156 +1331,116 @@ def rejudge_contest_select(request):
             contest.status = "end"
         else:
             contest.status = "deactivate"
-    context = {'all_contest': all_contest, 'rejudge': 'hover'}
+    
+    all_contest, paginator = pagination(request, all_contest)
+
+    context = {'all_contest': all_contest, 'paginator': paginator, 'rejudge': 'hover'}
     return render(request, 'rejudge_select_contest.html', context)
 
 
 @login_required
 @admin_auth_and_contest_exist
 def rejudge_submission_list(request, contest_id):
+    problem_id = request.GET.get('problem_id', 0)
+    result = request.GET.get('result', "All")
+
     refresh_contest_session_admin(request)  # refersh the contest session
     contest = Contest.objects.get(pk=contest_id)
+    
+    try:
+        problem_id = int(problem_id)
+    except ValueError:
+        return redirect('homepage')
 
-    submission_list = Submit.objects.filter(
+    if not problem_id == 0:
+        try:
+            problem_title = Problem.objects.get(pk=problem_id).title
+        except Problem.DoesNotExist:
+            problem_title = None
+    else:
+        problem_title = "All problems"
+        
+    all_submission = Submit.objects.filter(
         contest=contest).order_by('submit_time').reverse()
+    
     all_problems = set()
+    for submit in all_submission:
+        pro = (submit.problem.id, submit.problem.title)
+        all_problems.add(pro)
+    all_problems = sorted(all_problems, key=lambda x: x[1].lower())
+
+    submission_list = all_submission
+    if problem_id:
+        submission_list = submission_list.filter(problem_id=problem_id)
+
+    if not result == "All":
+        submission_list = submission_list.filter(result=result)
 
     start_time = contest.start_time
     for i in submission_list:
         i.contest_time = i.submit_time - start_time
-    for submit in submission_list:
-        pro = (submit.problem.id, submit.problem.title)
-        all_problems.add(pro)
-    all_problems = sorted(all_problems, key=lambda x: x[1].lower())
+    all_results = ['Correct', 'Wrong Answer', 'Judging', 'Time Limit Exceeded', 'Run Time Error',  
+                    'Compiler Error', 'Memory Limit Exceeded', 'No Output']
+    
+    submission_list, paginator = pagination(request, submission_list)
+
     context = {'submission_list': submission_list, "contest_title": contest.title,
-               'all_problems': all_problems, 'contest_id': contest.pk, 'rejudge': 'hover'}
+               'all_problems': all_problems, 'contest_id': contest_id, 'paginator': paginator,
+               'all_results': all_results, "selected_problem": problem_id, 
+               "problem_title": problem_title, 'selected_result': result, 'rejudge': 'hover'
+               }
     return render(request, 'rejudge_submission_list.html', context)
 
 
 @login_required
 @admin_auth
 def rejudge_submission_filter(request):
-    refresh_contest_session_admin(request)  # refersh the contest session
-    problem_id = int(request.GET.get('problem_id'))
-    contest_id = int(request.GET.get('contest_id'))
+    
+    try:
+        problem_id = int(request.GET.get('problem_id'))
+        contest_id = int(request.GET.get('contest_id'))
+    except ValueError:
+        return redirect('homepage')
+        
+    result = request.GET.get('result')
 
     try:
         contest = Contest.objects.get(pk=contest_id)
     except Contest.DoesNotExist:
         return redirect('homepage')
-    try:
-        problem_title = Problem.objects.get(pk=problem_id).title
-    except Problem.DoesNotExist:
-        problem_title = None
+
+    if not problem_id == 0:
+        try:
+            problem_title = Problem.objects.get(pk=problem_id).title
+        except Problem.DoesNotExist:
+            problem_title = None
+
     if problem_id == 0:
-        all_submissions = Submit.objects.filter(
-            contest_id=contest_id).order_by('submit_time').reverse()
-        problem_title = "All problems"
+        if result == "All":
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id).order_by('submit_time').reverse()
+        else:
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, result=result).order_by('submit_time').reverse()
+        problem_title = "All problems"    
     else:
-        all_submissions = Submit.objects.filter(
-            contest_id=contest_id, problem_id=problem_id).order_by('submit_time').reverse()
+        if result == "All":
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, problem_id=problem_id).order_by('submit_time').reverse()
+        else:
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, problem_id=problem_id, result=result).order_by('submit_time').reverse()
 
     start_time = contest.start_time
-    for i in all_submissions:
+    for i in submission_list:
         i.contest_time = i.submit_time - start_time
+    
+    submission_list, paginator = pagination(request, submission_list)
 
-    return render(request, 'rejudge_filter.html', {'submission_list': all_submissions, 'problem_title': problem_title, 'rejudge': 'hover'})
-
-
-def update_score_and_rank(submit):
-    point = submit.problem.point
-    contest = submit.contest
-
-    rank_cache_jury = RankcacheJury.objects.get(
-        user=submit.user, contest=contest)
-    rank_cache_public = RankcachePublic.objects.get(
-        user=submit.user, contest=contest)
-    try:
-        score_cache_jury = ScorecacheJury.objects.get(
-            rank_cache=rank_cache_jury, problem=submit.problem)
-    except ScorecacheJury.DoesNotExist:
-        score_cache_jury = ScorecacheJury(
-            rank_cache=rank_cache_jury, problem=submit.problem)
-        score_cache_jury.save()
-
-    try:
-        score_cache_public = ScorecachePublic.objects.get(
-            rank_cache=rank_cache_public, problem=submit.problem)
-    except ScorecachePublic.DoesNotExist:
-        score_cache_public = ScorecachePublic(
-            rank_cache=rank_cache_public, problem=submit.problem)
-        score_cache_public.save()
-
-    try:
-        punish_value = Setting.objects.get(name="punish time").value
-    except Setting.DoesNotExist:
-        punish_value = 20
-
-    if score_cache_jury.is_correct:
-        rank_cache_jury.point -= point
-        rank_cache_jury.punish_time -= (punish_value * score_cache_jury.punish + time_gap(
-            score_cache_jury.correct_submit_time, contest.start_time))
-        rank_cache_jury.save()
-        if contest.has_value:  # rating update
-            user = submit.user
-            user.rating -= (20 - 1 * score_cache_jury.punish)
-            user.save()
-
-    score_cache_jury.is_correct = False
-    score_cache_jury.punish = 0
-    score_cache_jury.submission = 0
-    score_cache_jury.correct_submit_time = None
-    score_cache_jury.save()
-
-    if score_cache_public.is_correct:
-        rank_cache_public.point -= point
-        rank_cache_public.punish_time -= (punish_value * score_cache_public.punish + time_gap(
-            score_cache_public.correct_submit_time, contest.start_time))
-        rank_cache_public.save()
-
-    score_cache_public.is_correct = False
-    score_cache_public.punish = 0
-    score_cache_public.submission = 0
-    score_cache_public.correct_submit_time = None
-    score_cache_public.pending = 0
-    score_cache_public.save()
-
-    all_submit = Submit.objects.filter(user=submit.user, problem=submit.problem, contest=contest, submit_time__gte=contest.start_time,
-                                       submit_time__lte=contest.end_time).order_by('submit_time')
-    for sub in all_submit:
-        score_cache_jury.submission += 1
-        if sub.result == "Correct":
-            score_cache_jury.correct_submit_time = sub.submit_time
-            score_cache_jury.is_correct = True
-            rank_cache_jury.point += point
-            rank_cache_jury.punish_time += (punish_value * score_cache_jury.punish + time_gap(
-                score_cache_jury.correct_submit_time, contest.start_time))
-            rank_cache_jury.save()
-            break
-        elif not sub.result == "Compiler Error":
-            score_cache_jury.punish += 1
-    score_cache_jury.save()
-
-    for sub in all_submit:
-        if contest.frozen_time and contest.unfrozen_time and contest.frozen_time <= sub.submit_time and sub.submit_time < contest.unfrozen_time:
-            score_cache_public.submission += 1
-            score_cache_public.pending += 1
-            score_cache_public.save()
-        else:
-            rank_cache_public.point = rank_cache_jury.point
-            rank_cache_public.punish_time = rank_cache_jury.punish_time
-            rank_cache_public.save()
-
-            score_cache_public.submission = score_cache_jury.submission
-            score_cache_public.punish = score_cache_jury.punish
-            score_cache_public.correct_submit_time = score_cache_jury.correct_submit_time
-            score_cache_public.is_correct = score_cache_jury.is_correct
-            score_cache_public.save()
-
-    if contest.has_value and score_cache_jury.is_correct:  # rating update
-        user = submit.user
-        user.rating += (20 - 1 * score_cache_jury.punish)
-        user.save()
+    context = {'submission_list': submission_list, 'problem_title': problem_title,
+               'paginator': paginator, 'contest_title': contest.title, 
+               'selected_problem': problem_id, 'selected_result': result, 'rejudge': 'hover'}
+    return render(request, 'rejudge_filter.html', context)
 
 
 @login_required
@@ -1865,26 +1455,20 @@ def ajax_rejudge(request):
     for submit_id in rejudge_submits:
         try:
             submit = Submit.objects.get(pk=submit_id)
-            try:
-                result = judge(file_name=submit.submit_file.path, problem=submit.problem,
-                       language=submit.language, submit=submit, rejudge=True)
-                submit.result = result
+            if submit.result == "Judging":
+                result_dict[submit_id] = "Judging *"
+                continue
+            if os.path.exists(submit.submit_file.path):
+                submit.result = "Judging"
                 submit.save()
-                update_score_and_rank(submit)
-            except ValueError:
+                judge_background.apply_async([submit.id, True])
+                result = submit.result
+            else:
                 result = "file not found"
         except Submit.DoesNotExist:
             result = "not submitted"
 
-        # output_files = TestcaseOutput.objects.filter(submit = submit)
-        # for i in output_files:
-        #     if i.result == "Correct":
-        #         continue
-        #     else:
-        #         if i.output_file.size > 2 * i.test_case.output.size:
-        #             os.system('rm '+i.output_file.path)
-        #             os.system('touch '+i.output_file.path)
-        result_dict[submit_id] = submit.result
+        result_dict[submit_id] = result
     contest.last_update = timezone.now()
     contest.save()
     response_data = {'result': result_dict}
@@ -1900,7 +1484,7 @@ def single_rejudge(request, submit_id):
         single_submit.contest.start_time
     submit = [single_submit]
 
-    return render(request, 'single_user_rejudge.html', {'submit': submit, 'contest_id': single_submit.contest.pk, 'rejudge': 'hover'})
+    return render(request, 'single_user_rejudge.html', {'this_submit': submit, 'contest_id': single_submit.contest.pk, 'rejudge': 'hover'})
 
 
 @login_required
@@ -1924,7 +1508,11 @@ def multi_rejudge(request, problem_id, contest_id, user_id):
     for i in specific_submissions:
         i.contest_time = i.submit_time - start_time
 
-    return render(request, 'single_user_rejudge.html', {'submit': specific_submissions, 'contest_id': specific_submissions[0].contest.pk, 'rejudge': 'hover'})
+    specific_submissions, paginator = pagination(request, specific_submissions)
+    context = {'this_submit': specific_submissions, 'paginator': paginator, 
+              'contest_id': specific_submissions[0].contest.pk, 'rejudge': 'hover'
+            }
+    return render(request, 'single_user_rejudge.html', context)
 
 
 

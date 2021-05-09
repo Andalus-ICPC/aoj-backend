@@ -319,8 +319,42 @@
                 </div>
             {%endfor%}
             </table>
-        
-
+            <!-- pagination -->
+            {% if all_submits.has_other_pages %}
+                {% load proper_paginate %}
+                {% load url_replace %}
+                <ul class="pagination">
+                    {% if all_submits.number == 1 %}
+                        <li class="disabled"><span>⇤</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                    {% endif %}
+                    {% if all_submits.has_previous %}
+                        
+                        <li><a class="page-link" href="?{% url_replace request 'page' all_submits.previous_page_number %}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in paginator|proper_paginate:all_submits.number%}
+                        {% if all_submits.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if all_submits.has_next %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' all_submits.next_page_number %}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                    {% if all_submits.number == paginator.num_pages %}
+                        <li class="disabled"><span>⇥</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- end pagination -->  
         <div>
         </div>
     </div>

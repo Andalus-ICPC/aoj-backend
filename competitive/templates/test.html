@@ -1,0 +1,148 @@
+
+        <!-- {% if submission_list.has_other_pages %}
+            <ul class="pagination">
+                {% if submission_list.has_previous %}
+                <li><a href="?page={{ submission_list.previous_page_number }}">&laquo;</a></li>
+                {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in submission_list.paginator.page_range %}
+                    {% if submission_list.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    
+                    {% elif i > submission_list.number|add:'-4' and i < submission_list.number|add:'4' %}
+                        <li><a href="?page={{ i }}">{{ i }}</a></li>
+                    
+                    
+                    {% endif %}
+                {% endfor %}
+                {% if submission_list.has_next %}
+                <li><a href="?page={{ submission_list.next_page_number }}">&raquo;</a></li>
+                {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+            </ul>
+        {% endif %} -->
+
+        <!-- {% if submission_list.has_other_pages %}
+        <ul class="pagination">
+        {% if submission_list.has_previous %}
+        <li>«</li>
+        {% else %}
+        <li class="disabled">«</li>
+        {% endif %}
+        {% for i in submission_list.paginator.page_range %}
+        {% if submission_list.number > 3 and forloop.first %}
+        <li>1</li>
+        <li class="disabled">⋯</li>
+        {% endif %}
+        {% if submission_list.number == i %}
+        <li class="active">{{ i }} (current)</li>
+        {% elif i > submission_list.number|add:'-3' and i < submission_list.number|add:'3' %}
+        <li>{{ i }}</li>
+        {% endif %}
+        {% if submission_list.paginator.num_pages > submission_list.number|add:'3' and forloop.last %}
+        <li>⋯</li>
+        <li>{{ submission_list.paginator.num_pages }}</li>
+        {% endif %}
+        {% endfor %}
+        {% if submission_list.has_next %}
+        <li>»</li>
+        {% else %}
+        <li class="disabled">»</li>
+        {% endif %}
+        </ul>
+        {% endif %} -->
+
+       
+
+<!--     
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if submission_list.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if submission_list.has_previous %}
+                44444
+                <li><a class="page-link" href="?{% url_replace request 'page' submission_list.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:submission_list.number %}
+                {% if submission_list.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="submission_list-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if submission_list.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' submission_list.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if submission_list.number == paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+            {% endif %}
+        </ul> -->
+
+        'contestant_paginator': contestant_paginator,
+        'admin_paginator': admin_paginator,
+        'jury_paginator': jury_paginator,
+        'public_paginator': public_paginator,
+        'site_admin_paginator': site_admin_paginator,
+
+
+
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(submission_list, 25) # Show 25 submits per page.
+
+    try:
+        submission_list = paginator.page(page_number)
+    except PageNotAnInteger:
+        submission_list = paginator.page(1)
+    except EmptyPage:
+        submission_list = paginator.page(paginator.num_pages)
+
+
+        <!-- pagination -->
+        {% if user.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace2 %}
+        <ul class="pagination">
+            {% if user.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'type' 'user' %}">⇤</a></li>
+            {% endif %}
+            {% if user.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace2 request 'page' user.previous_page_number 'type' 'user'%}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in site_admin_paginator|proper_paginate:user.number%}
+                {% if user.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' i 'type' 'user' %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if user.has_next %}
+                <li><a class="page-link" href="?{% url_replace2 request 'page' user.next_page_number 'type' 'user' %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if user.number == site_admin_paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace2 request 'page' site_admin_paginator.num_pages 'type' 'user' %}">⇥</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    <!-- end pagination -->
+    </div>

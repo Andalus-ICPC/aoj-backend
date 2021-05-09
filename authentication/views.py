@@ -20,6 +20,8 @@ from authentication.forms import PublicUserRegistrationForm, EditMyProfile, Edit
 from django.contrib.auth.forms import AuthenticationForm
 from public.models import Statistics
 from competitive.models import Submit
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .pagination import pagination, page_number_pagination
 
 # Create your views here.
 def index(request):
@@ -64,17 +66,6 @@ def homepage(request):
     elif request.user.role.short_name == 'public':
         return render(request, 'public_index.html')
 
-# class Register(CreateView):
-#     model = User
-#     fields = ["username", "name", "email",  "password"]
-#     template_name = "register.html"
-#     success_url = "/home/"
-
-#     def form_valid(self, form):
-#         form.instance.role.short_name = "public"
-#         self.object = form.save()
-#         return super().form_valid(form)
-
 
 def register(request):
     if request.method == "POST":
@@ -97,12 +88,6 @@ def register(request):
 
 @login_required
 def profile(request):
-    # user_role = request.user.role
-    # user_register_date = request.user.register_date
-    # user_score = request.user.rating
-    # username = request.user.username
-    # user_campus = request.user.campus.name
-    # initial_info = {'_campus': user_campus, '_username': username, '_register_date': user_register_date, '_rating': user_score}
     if request.method == "POST":
         form = EditMyProfile(request.POST, instance=request.user)
         if form.is_valid():
@@ -149,11 +134,38 @@ def user_list(request):
     public_user = User.objects.filter(
         role__short_name="public").order_by('username')
 
+    page_number = request.GET.get('page', 1)
+    role = request.GET.get('role', "contestant")
+    contestant_page_number = 1
+    jury_page_number = 1
+    public_page_number = 1
+    admin_page_number = 1
+    site_admin_page_number = 1
+
+    if role == 'contestant': contestant_page_number=page_number
+    elif role == 'jury': jury_page_number=page_number
+    elif role == 'admin': admin_page_number=page_number
+    elif role == 'public': public_page_number=page_number
+    elif role == 'site_admin': site_admin_page_number=page_number
+
+    contestant_user, contestant_paginator = page_number_pagination(request, contestant_user, contestant_page_number)
+    jury_user, jury_paginator = page_number_pagination(request, jury_user, jury_page_number)
+    public_user, public_paginator = page_number_pagination(request, public_user, public_page_number)
+    admin_user, admin_paginator = page_number_pagination(request, admin_user, admin_page_number)
+    site_admin_user, site_admin_paginator = page_number_pagination(request, site_admin_user, site_admin_page_number)
+
     context = {
         'contestant_user': contestant_user,
         'admin_user': admin_user,
         'jury_user': jury_user,
         'public_user': public_user,
+        'site_admin_user': site_admin_user,
+        'contestant_paginator': contestant_paginator,
+        'admin_paginator': admin_paginator,
+        'jury_paginator': jury_paginator,
+        'public_paginator': public_paginator,
+        'site_admin_paginator': site_admin_paginator,
+        "role": role,
         'user': 'hover'
     }
     return render(request, 'user_list.html', context)
@@ -384,7 +396,8 @@ def setting(request):
 @admin_auth
 def campus_list(request):
     campus_list = Campus.objects.all().order_by('name')
-    return render(request, 'campus_list.html', {'campus_list': campus_list})
+    campus_list, paginator = pagination(request, campus_list)
+    return render(request, 'campus_list.html', {'campus_list': campus_list, "paginator": paginator})
 
 
 @login_required
@@ -448,13 +461,20 @@ def rating(request):
         role__short_name='contestant', rating__gt=0).order_by('rating').reverse()
 
     user_rank = [[rank + 1, row] for rank, row in enumerate(user_rating)]
+    rank = 1
     for i in range(1, len(user_rank)):
         if user_rank[i-1][1].rating == user_rank[i][1].rating:
-            user_rank[i][0] = ''
+            # user_rank[i][0] = ''
+            user_rank[i][0] = rank
+        else:
+            rank = i + 1
+        
 
+    user_rank, paginator = pagination(request, user_rank)
     base_page = check_base_site(request)
     context = {
         "user_rank": user_rank,
+        'paginator': paginator,
         "base_page": base_page,
         'rating': 'hover'
     }
@@ -586,13 +606,17 @@ def user_ranklists(role):
 
     rating_list.sort(reverse=True)
 
+    rank_number = 1
     if rating_list:
-        rating_list[0].append(1)
+        rating_list[0].append(rank_number)
+    
     for i in range(1, len(rating_list)):
         if rating_list[i][0] == rating_list[i-1][0]:
-            rating_list[i].append('')
+            rating_list[i].append(rank_number)
+            # rating_list[i].append('')
         else:
-            rating_list[i].append(i+1)
+            rank_number = i + 1
+            rating_list[i].append(rank_number)
 
     user_ranklists = list()
     for i in rating_list:
@@ -607,14 +631,31 @@ def ranklists(request):
     user_rank = user_ranklists("public")
     university_rank = university_ranklists("public")
     country_rank = country_ranklists("public")
+    
+    page_number = request.GET.get('page', 1)
+    rank_type = request.GET.get('type', "user")
+    user_page_number = 1
+    university_page_number = 1
+    country_page_number = 1
+    
+    if rank_type == 'user': user_page_number=page_number
+    elif rank_type == 'university': university_page_number=page_number
+    elif rank_type == 'country': country_page_number=page_number
+   
+    user_rank, user_paginator = page_number_pagination(request, user_rank, user_page_number)
+    university_rank, university_paginator = page_number_pagination(request, university_rank, university_page_number)
+    country_rank, country_paginator = page_number_pagination(request, country_rank, country_page_number)
+    
+    context = {
+                'user_ranklists': user_rank,
+                'university_ranklists': university_rank,
+                'country_ranklists': country_rank,
+                'user_paginator': user_paginator,
+                'university_paginator': university_paginator,
+                'country_paginator': country_paginator
+                }
 
-    return render(request, 'ranklists.html',
-                  {
-                      'user_ranklists': user_rank,
-                      'university_ranklists': university_rank,
-                      'country_ranklists': country_rank
-                  }
-                  )
+    return render(request, 'ranklists.html', context)
 
 @login_required
 @admin_site_jury_auth
@@ -622,13 +663,31 @@ def leaderboard(request):
     user_rank = user_ranklists("contestant")
     university_rank = university_ranklists("contestant")
     country_rank = country_ranklists("contestant")
+
+    page_number = request.GET.get('page', 1)
+    rank_type = request.GET.get('type', "user")
+    user_page_number = 1
+    university_page_number = 1
+    country_page_number = 1
+    
+    if rank_type == 'user': user_page_number=page_number
+    elif rank_type == 'university': university_page_number=page_number
+    elif rank_type == 'country': country_page_number=page_number
+   
+    user_rank, user_paginator = page_number_pagination(request, user_rank, user_page_number)
+    university_rank, university_paginator = page_number_pagination(request, university_rank, university_page_number)
+    country_rank, country_paginator = page_number_pagination(request, country_rank, country_page_number)
+    
     base_page = check_base_site(request)
-    return render(request, 'leaderboard.html',
-                  {
-                      'user_ranklists': user_rank,
-                      'university_ranklists': university_rank,
-                      'country_ranklists': country_rank,
-                      'base_page': base_page,
-                      'leaderboard': 'hover'
-                  }
-                  )
+    context = {
+                'user_ranklists': user_rank,
+                'university_ranklists': university_rank,
+                'country_ranklists': country_rank,
+                'user_paginator': user_paginator,
+                'university_paginator': university_paginator,
+                'country_paginator': country_paginator,
+                'rank_type': rank_type,
+                'base_page': base_page,
+                'leaderboard': 'hover'
+                }
+    return render(request, 'leaderboard.html', context)

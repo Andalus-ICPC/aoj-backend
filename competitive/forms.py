@@ -15,7 +15,6 @@ class SubmitAnswer(forms.ModelForm):
         cleaned_data = super().clean()
         submit_file_size = cleaned_data.get('submit_file').size # it is in byte
         submit_file_size /= 1024.0
-        # print(submit_file_size)
 
         try:
             max_source_size = Setting.objects.get(name="source code size").value
@@ -35,8 +34,6 @@ class SubmitWithEditor(forms.Form):
         cleaned_data = super().clean()
         submit_file_size = len(cleaned_data.get('source').encode('utf-8')) # it is in byte
         submit_file_size /= 1024.0
-
-        # print(submit_file_size)
 
         try:
             max_source_size = Setting.objects.get(name="source code size").value

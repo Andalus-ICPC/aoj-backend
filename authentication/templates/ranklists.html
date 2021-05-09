@@ -5,13 +5,13 @@
 {% load static %}
 {% load widget_tweaks %}
 
-        <link rel="stylesheet" href="{% static 'files/ranklist.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'files/ranklist.css' %}" type="text/css">
 
 <div class="wrapper col-sm-8 col-centered">
     <div class="titles">
-        <div class="title">User ranklist</div>
-        <div class="title">University ranklist</div>
-        <div class="title">Country ranklist</div>
+        <div class="title">User Rank Lists</div>
+        <div class="title">University Rank Lists</div>
+        <div class="title">Country Rank Lists</div>
 
     </div>
     <div class="content">
@@ -44,6 +44,43 @@
                     </tr>
                 {% endfor %}
             </table>
+            
+            <!-- pagination -->
+            {% if user_ranklists.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace2 %}
+            <ul class="pagination">
+                {% if user_ranklists.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'type' 'user' %}">⇤</a></li>
+                {% endif %}
+                {% if user_ranklists.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' user_ranklists.previous_page_number 'type' 'user' %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in user_paginator|proper_paginate:user_ranklists.number%}
+                    {% if user_ranklists.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' i 'type' 'user' %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if user_ranklists.has_next %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' user_ranklists.next_page_number 'type' 'user' %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if user_ranklists.number == user_paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' user_paginator.num_pages 'type' 'user' %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->   
         </div> 
 
         <div class="item">
@@ -76,6 +113,43 @@
                     </tr>
                 {% endfor %}
             </table>
+            
+            <!-- pagination -->
+            {% if university_ranklists.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace2 %}
+            <ul class="pagination">
+                {% if university_ranklists.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'type' 'university' %}">⇤</a></li>
+                {% endif %}
+                {% if university_ranklists.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' university_ranklists.previous_page_number 'type' 'university' %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in university_paginator|proper_paginate:university_ranklists.number%}
+                    {% if university_ranklists.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' i 'type' 'university' %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if university_ranklists.has_next %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' university_ranklists.next_page_number 'type' 'university' %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if university_ranklists.number == university_paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' university_paginator.num_pages 'type' 'university' %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->   
         </div> 
 
         <div class="item">
@@ -104,34 +178,58 @@
                     </tr>
                 {% endfor %}
             </table>
+
+
+            <!-- pagination -->
+            {% if country_ranklists.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace2 %}
+            <ul class="pagination">
+                {% if country_ranklists.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'type' 'country' %}">⇤</a></li>
+                {% endif %}
+                {% if country_ranklists.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' country_ranklists.previous_page_number 'type' 'country' %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in country_paginator|proper_paginate:country_ranklists.number%}
+                    {% if country_ranklists.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' i 'type' 'country' %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if country_ranklists.has_next %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' country_ranklists.next_page_number 'type' 'country' %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if country_ranklists.number == country_paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' country_paginator.num_pages 'type' 'country' %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->   
         </div> 
     </div>
 </div>
    
 <script>
-// tab for ranklist
-    function openRankList(evt, type) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-
-        tablinks = document.getElementsByClassName("tablinks");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-
-        document.getElementById(type).style.display = "block";
-        evt.currentTarget.className += " active";
-    }
-
-
+    
     var titles = document.querySelectorAll('.title');
     var items = document.querySelectorAll('.item');
 
-    items[0].style.display = 'block';
-    titles[0].setAttribute('data-status', 'active');
+    var type_list = {"user": 0, "university": 1, "country": 2};
+    var type = '{{rank_type}}';
+    var selected_type = type_list[type];
+    items[selected_type].style.display = 'block';
+    titles[selected_type].setAttribute('data-status', 'active');
     
     for(let i=0; i<titles.length; i++) {
         let status = true;
@@ -153,6 +251,24 @@
             }
         });
     }
+// tab for ranklist
+    function openRankList(evt, type) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        document.getElementById(type).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+
 </script>
 
 {% endblock %}

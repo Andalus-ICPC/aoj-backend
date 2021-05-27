@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Overview &mdash; ANDALUSjudge team manual 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="ANDALUSjudge team manual" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ANDALUSjudge team manual
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#copyright-and-licensing">Copyright and Licensing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teammanual.html">Team Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adminmanual.html">Admin Manual</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ANDALUSjudge team manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/overview.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<p>Andalus Judge is a system for running programming contests, like the ICPC regional and world finals
+programming contests.
+This usually means that teams are on-site and have a fixed time period (mostly 5 hours) and one computer
+to solve a number of problems (mostly 8-12). Problems are solved by writing a program in one of the allowed
+programming languages(Python, C/C++, Java), that reads input according to the problem input specification
+and writes the correct, corresponding output.
+The judging is done by submitting the source code of the solution to the jury.
+There the jury system automatically compiles and runs the program and compares the program output with
+the expected output.
+This software can handle the submission and judging during such contests. It also handles feedback to the
+teams(clarification from jury) and helps on communication between teams and jury on problems
+(clarification requests). It has web interfaces for the jury, the teams (their submissions and
+clarification requests) and the public (scoreboard).</p>
+<div class="admonition-features admonition">
+<p class="admonition-title">Features</p>
+<dl>
+<dt>A global overview of the features that Andalus Judge provides</dt><dd><p>Automatic judging with distributed (scalable) judge hosts</p>
+<p>Web interface for portability and simplicity</p>
+<p>Modular system for plugging in languages/compilers and validators</p>
+<p>Detailed jury information (submissions, judgings, diffs) and options (rejudge, clarifications)</p>
+<p>Designed with security in mind</p>
+</dd>
+</dl>
+</div>
+<div class="admonition-requirements-and-contest-planning admonition">
+<p class="admonition-title">Requirements and contest planning</p>
+<dl>
+<dt>Andalus requires the following to be available to run.</dt><dd><p>At least one machine to act as the Andalus Judge server. The machine needs to be running
+Linux (or possibly a Unix variant) and a web server with Django 2.0.7 or newer.
+A Postgresql &gt;= 10.16 database is also needed.</p>
+<p>A number of machines to act as judgehosts (at least one). They need to run Linux with (sudo)
+root access. Required software is Flask and compilers for the languages you want to support.</p>
+<p>Team workstations, one for each team. They require only a modern web browser to interface with
+Andalus Judge, but of course need a local development environment for teams to develop and test
+solutions. Optionally these have the Andalus Judge submit client installed.</p>
+<p>Jury / admin workstations. The jury members (persons) that want to configure and monitor the
+contest need just any workstation with a web browser to access the web interface. No Andalus
+Judge software runs on these machines.</p>
+</dd>
+</dl>
+</div>
+<p>One (virtual) machine is required to run the Andalus Judge Server. The minimum amount of judgehosts
+is also one, but preferably more: depending on configured time limits, and the amount of test cases
+per problem, judging one solution can tie up a judgehost for several minutes, and if there’s a problem
+with one judgehost it can be resolved while judging continues on the others.</p>
+<p>As a rule of thumb, we recommend one judgehost per 20 teams.
+However, overprovisioning does not hurt: Andalus Judge scales easily in the number of judgehosts,
+so if hardware is available, by all means use it. But running a contest with fewer machines will equally
+work well, only the waiting time for teams to receive an answer may increase.</p>
+<p>Each judgehost should be a dedicated (virtual) machine that performs no other tasks. For example, although
+running a judgehost on the same machine as the judgeserver is possible, it’s not recommended except for
+testing purposes. Judgehosts should also not double as local workstations for jury members. Having all
+judgehosts be of uniform hardware configuration helps in creating a fair, reproducible setup; in the ideal
+case they are run on the same type of machines that the teams use.</p>
+<div class="section" id="copyright-and-licensing">
+<h2>Copyright and Licensing<a class="headerlink" href="#copyright-and-licensing" title="Permalink to this headline">¶</a></h2>
+<p>Andalus Judge is developed by <code class="docutils literal notranslate"><span class="pre">Mukerem</span> <span class="pre">Ali</span></code>, <code class="docutils literal notranslate"><span class="pre">Mustefa</span> <span class="pre">Kamil</span></code> and <code class="docutils literal notranslate"><span class="pre">Amir</span> <span class="pre">Kheiru</span></code>. Many other people
+have contributed: <code class="docutils literal notranslate"><span class="pre">Abdi</span> <span class="pre">Adem</span></code>, <code class="docutils literal notranslate"><span class="pre">Elias</span> <span class="pre">Amha</span></code>, <code class="docutils literal notranslate"><span class="pre">Temkin</span> <span class="pre">Mengistu</span></code>, <code class="docutils literal notranslate"><span class="pre">Mebatsion</span> <span class="pre">Sahle</span></code>.</p>
+<blockquote>
+<div><p>Andalus Judge is Copyright (c) <a href="#id1"><span class="problematic" id="id2">|2018 - 2021|</span></a> by the Andalus Judge developers and contributors.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="ANDALUSjudge team manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Mustefa Kamil.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

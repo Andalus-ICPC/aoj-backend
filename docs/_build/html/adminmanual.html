@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Admin Manual &mdash; ANDALUSjudge team manual 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Team Manual" href="teammanual.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ANDALUSjudge team manual
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teammanual.html">Team Manual</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Admin Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuring-the-system">Configuring the system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-users-and-teams">Setting up users and teams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-a-problem">Adding a Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-a-contest">Adding a Contest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clarification-requests">Clarification Requests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#handling-clarification-requests">Handling clarification requests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#judging-topics">Judging topics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#flow-of-a-submission">Flow of a submission</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rejudging">Rejudging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enforcement-of-time-limits">Enforcement of time limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#definitions-and-terms">Definitions and Terms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#appendix">Appendix</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ANDALUSjudge team manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Admin Manual</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/adminmanual.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="admin-manual">
+<h1>Admin Manual<a class="headerlink" href="#admin-manual" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="configuring-the-system">
+<h2>Configuring the system<a class="headerlink" href="#configuring-the-system" title="Permalink to this headline">¶</a></h2>
+<p>Configuration of the judge system is done by logging in as administrator to the web interface.</p>
+</div>
+<div class="section" id="setting-up-users-and-teams">
+<h2>Setting up users and teams<a class="headerlink" href="#setting-up-users-and-teams" title="Permalink to this headline">¶</a></h2>
+<p>Under Users from the homepage you can add user accounts for the people accessing your system.
+There are several roles possible:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Administrative User:</dt><dd><p>can configure and change everything in Andalus Judge.</p>
+</dd>
+<dt>Jury User:</dt><dd><p>can view submissions ,clarification requests, users, problem, contest and leaderboard.</p>
+</dd>
+<dt>Team User:</dt><dd><p>can view its own team interface and submit solutions, send clarification requests.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>So add users accordingly. For users registration there are two ways using csv format and manual
+adding users.</p>
+<dl>
+<dt>The formats are as shown below:</dt><dd><p>Figure 1 CSV format</p>
+<p>Figure 2 manual format</p>
+</dd>
+</dl>
+<p>Resetting the password for a user</p>
+</div>
+<div class="section" id="adding-a-problem">
+<h2>Adding a Problem<a class="headerlink" href="#adding-a-problem" title="Permalink to this headline">¶</a></h2>
+<p>When registration is done, you can upload the intended problems that teams need to solve under Problems.</p>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="_images/add-problem.png"><img alt="_images/add-problem.png" src="_images/add-problem.png" style="width: 80%;" /></a>
+</div>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="_images/add-testcase.png"><img alt="_images/add-testcase.png" src="_images/add-testcase.png" style="width: 80%;" /></a>
+</div>
+<p>Andalus Judge supports uploading problems as a zip file or configuring each problem manually
+via the interface. You can add a problem to a contest by editing the contest from the Contests page later.</p>
+<p>Time Limit is the maximum number of seconds a submission for this problem is allowed to run before a
+‘TIME LIMIT’ response is given (<code class="docutils literal notranslate"><span class="pre">to</span> <span class="pre">be</span> <span class="pre">multiplied</span> <span class="pre">possibly</span> <span class="pre">by</span> <span class="pre">a</span> <span class="pre">language</span> <span class="pre">factor</span></code>).</p>
+<p>Error is  the maximum absolute difference between the test case output and user output for
+precision problems.</p>
+</div>
+<div class="section" id="adding-a-contest">
+<h2>Adding a Contest<a class="headerlink" href="#adding-a-contest" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="_images/add-contest.png"><img alt="_images/add-contest.png" src="_images/add-contest.png" style="width: 80%;" /></a>
+</div>
+<p>You configure a new contest by adding it under the Contests link from the main page. Besides the name
+the most important configuration about a contest are the various time milestones.</p>
+<p>A contest can be selected for viewing after its activation time, but the scoreboard will only become
+visible to the public and teams once the contest starts. Thus no data such as problems and teams is
+revealed before then.</p>
+<p>When the contest ends, the scores will remain displayed until the deactivation time passes.</p>
+<p>Andalus Judge has the option to ‘freeze’ the public and team scoreboards at some point during the contest.
+This means that scores are no longer updated and remain to be displayed as they were at the time of the
+freeze. This is often done to keep the last hour interesting for all. The scoreboard freeze time can be
+set with the frozentime milestone.</p>
+<p>The scoreboard freezing works by looking at the time a submission is made. Therefore it’s possible that
+submissions from (just) before the frozen time but judged after it can still cause updates to the public
+scoreboard. A rejudging during the freeze may also cause such updates. The jury and admin interface will
+however always show the actual scoreboard.</p>
+<p>Once the contest is over, the scores are not directly ‘unfrozen’. You can release the final scores to the
+team and public interfaces when the time is right. You can do this either by setting a predefined
+unfrozentime in the contest table.</p>
+<p>All events happen at the first moment of the defined time. That is: for a contest with start time
+“12:00:00” and end time “17:00:00”, the first submission will be accepted at 12:00:00 and the last one
+at 16:59:59.</p>
+</div>
+<div class="section" id="clarification-requests">
+<h2>Clarification Requests<a class="headerlink" href="#clarification-requests" title="Permalink to this headline">¶</a></h2>
+<p>Communication between teams and admin happens through Clarification Requests. Everything related to that
+is handled under the Clarifications menu item.</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="_images/admin-clarification.png"><img alt="_images/admin-clarification.png" src="_images/admin-clarification.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">teams can use their web interface to send a clarification request to the admin. The admin can send a
+response to that team specifically, or send it to all teams. The latter is done to ensure that all
+teams have the same information about the problem set. The admin can also send a clarification that
+does not correspond to a specific request. These will be termed general clarification.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<div class="section" id="handling-clarification-requests">
+<h3>Handling clarification requests<a class="headerlink" href="#handling-clarification-requests" title="Permalink to this headline">¶</a></h3>
+<p>Under Clarifications, three lists are shown: requested clarification list, new clarifications and
+answered clarifications.</p>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="_images/admin-clarification-handle.png"><img alt="_images/admin-clarification-handle.png" src="_images/admin-clarification-handle.png" style="width: 80%;" /></a>
+</div>
+<p>Every incoming clarification request will initially be marked as unanswered. A request will be marked
+as answered when a response has been sent. Additionally it’s possible to mark a clarification request
+as answered with the button that can be found when viewing the request.</p>
+<p>An answer to a clarification request is made by putting the text in the input box under the request text.
+You can choose to either send it to the team that requested the clarification, or to all teams.</p>
+</div>
+</div>
+<div class="section" id="judging-topics">
+<h2>Judging topics<a class="headerlink" href="#judging-topics" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="flow-of-a-submission">
+<h3>Flow of a submission<a class="headerlink" href="#flow-of-a-submission" title="Permalink to this headline">¶</a></h3>
+<dl>
+<dt>The flow of an incoming submission is as follows.</dt><dd><ol class="arabic simple">
+<li><p>Team submits solution.</p></li>
+</ol>
+<p>2. The first available judgehost compiles, runs and checks the submission. The outcome and outputs
+are stored as a judging of this submission.</p>
+<p>3. The result is automatically recorded and the team can view the result and the scoreboard is
+updated (unless after the scoreboard freezes).</p>
+</dd>
+</dl>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="_images/admin-submit.png"><img alt="_images/admin-submit.png" src="_images/admin-submit.png" style="width: 80%;" /></a>
+</div>
+</div>
+</div>
+<div class="section" id="rejudging">
+<h2>Rejudging<a class="headerlink" href="#rejudging" title="Permalink to this headline">¶</a></h2>
+<p>In some situations it is necessary to rejudge one or more submissions. This means that the submission will
+re-enter the flow as if it had not been judged before. The submittime will be the original time, but the
+program will be compiled, run and tested again.</p>
+<p>This can be useful when there was some kind of problem: a compiler that was broken and later fixed, or test
+data that was incorrect and later changed. When a submission is rejudged, the old judging data is replaced
+by the new one.</p>
+<p>You can rejudge a single submission by pressing the ‘Rejudge’ button when viewing the submission details.
+It is also possible to rejudge all submissions for a given problem or result type by filtering based on
+a problem or result type., press the “start rejudging” button.</p>
+<p>Teams will not get explicit notifications of rejudgings, other than a potentially changed outcome of their
+submissions. It might be desirable to combine rejudging with a clarification to the team or all teams
+explaining what has been rejudged and why.</p>
+</div>
+<div class="section" id="enforcement-of-time-limits">
+<h2>Enforcement of time limits<a class="headerlink" href="#enforcement-of-time-limits" title="Permalink to this headline">¶</a></h2>
+<p>Time limits within Andalus Judge are enforced primarily in CPU time. The way that time limits are
+calculated and passed through the system involves a number of steps.</p>
+<p>Time limits are set per problem in seconds. Each language in turn may define a time factor (defaulting to 1)
+that multiplies it to get a specific time limit for that problem/language combination. The time limit is
+passed to runguard, the wrapper program that applies restrictions to submissions when they are being run,
+as both wall clock and CPU limit. This is used by runguard when reporting whether the actual time limit has
+been surpassed. The submitted program gets killed when CPU time has passed.</p>
+</div>
+<div class="section" id="definitions-and-terms">
+<h2>Definitions and Terms<a class="headerlink" href="#definitions-and-terms" title="Permalink to this headline">¶</a></h2>
+<p>Judgehost is a computer with Andalus web interface, that is used to see users’ submissions and
+rejudge the submissions.</p>
+<p>Judge server  is a virtual machine or computer, that is the central entity that runs the Andalus
+Judge web interface and API that teams, jury members and the judgehosts connect to.</p>
+<p>Workstation is a working computer with a browser to interact with the judge system.</p>
+</div>
+<div class="section" id="appendix">
+<h2>Appendix<a class="headerlink" href="#appendix" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-problem-format-specification admonition">
+<p class="admonition-title">Problem format specification</p>
+<p>Andalus Judge supports the import of problems in a zip format.</p>
+<dl>
+<dt>On top, Aandalus Judge defines a few extensions:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">info.ini</span></code> (optional): metadata file, see below.</p>
+<p><code class="docutils literal notranslate"><span class="pre">problem.pdf</span></code> (optional): problem statements as distributed to participants.
+The file extension must be pdf formats.</p>
+<p><code class="docutils literal notranslate"><span class="pre">secret</span></code> a folder that contain test case data for the problem</p>
+</dd>
+</dl>
+<p>The file <code class="docutils literal notranslate"><span class="pre">info.ini</span></code> contains key-value pairs, one pair per line, of the form key = value.
+The = can optionally be surrounded by whitespace and the value may be quoted, which allows it to
+contain newlines.</p>
+<p>The following keys are supported (these correspond directly to the problem settings
+in the admin web interface):
+<code class="docutils literal notranslate"><span class="pre">title</span></code> - the problem displayed name</p>
+<p><code class="docutils literal notranslate"><span class="pre">short_name</span></code> - the problem short name displayed on scoreboard.(most of the time it is
+represented by uppercase English letters)</p>
+<p><code class="docutils literal notranslate"><span class="pre">time_limit</span></code> - time limit in seconds per test case</p>
+<p><code class="docutils literal notranslate"><span class="pre">error</span></code> - the maximum absolute difference between the test case output and user output for
+precision problems (defaults 0.0000)</p>
+<p><code class="docutils literal notranslate"><span class="pre">point</span></code> - number of points for this problem (defaults to 1)</p>
+<p><code class="docutils literal notranslate"><span class="pre">ballon</span></code> - balloon color of the problem in hexadecimal representation for example “#ff0000”
+represent red color (defaults to white)</p>
+<p>The basename of the <code class="docutils literal notranslate"><span class="pre">ZIP-file</span></code> will be used as the problem short name (e.g. “A”). error, point and
+balloon keys are optional. If they are present, the respective value will be overwritten; if not
+present, then a default chosen when creating a new problem.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="teammanual.html" class="btn btn-neutral float-left" title="Team Manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Mustefa Kamil.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

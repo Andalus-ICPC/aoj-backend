@@ -284,6 +284,50 @@ def testcase_output(result_list, submit):
          print(e)
 
 
+def rejudge_testcase_output(result_list, submit):
+   result_dict ={0: 'Correct', 2: 'Time Limit Exceeded', 3: 'Time Limit Exceeded',
+                  -1: 'Wrong Answer', 4: 'Memory Limit Exceeded', 5: 'Run Time Error', 
+                  7: "No Output"}
+
+   testcase_info = {}
+   server = submit.server.address
+
+   update_testcase = set()
+   for test in result_list:
+      cpu_time = test['cpu_time']/1000.0
+      memory = test['memory']
+      real_time = test['real_time']/1000.0
+      result = result_dict[test['result']]
+      testcase_name = test['testcase']
+      try:
+         testcase_instance = TestCase.objects.get(name=testcase_name, problem=submit.problem)
+         try:
+            insert = TestcaseOutput.objects.get(test_case=testcase_instance, submit=submit)
+            insert.result = result
+            insert.execution_time = cpu_time
+            insert.memory_usage = memory
+            insert.save()
+
+         except TestcaseOutput.DoesNotExist:
+            insert = TestcaseOutput(test_case=testcase_instance, result=result, submit=submit,
+               execution_time=cpu_time, memory_usage=memory)
+
+            insert.save()
+
+         update_testcase.add(testcase_instance)
+      except (TestCase.DoesNotExist, IntegrityError, FileNotFoundError) as e:
+         print(e)
+
+   old_testcase = {i.test_case for i in TestcaseOutput.objects.filter(submit=submit)}
+   remain = old_testcase.difference(update_testcase)
+   for testcase_instance in remain:
+      try:
+         output = TestcaseOutput.objects.get(test_case=testcase_instance, submit=submit)
+         output.delete()
+      except TestcaseOutput.DoesNotExist:
+         pass
+
+
 
 
 class ChooseJudgeServer:
@@ -325,7 +369,7 @@ def judge_background(submission_id, rejudge=False, public=False, previous_result
          "src_code": content,
          "testcase_id": str(submission.problem.id),
          "max_cpu_time": int(1000*submission.problem.time_limit),
-         # "max_real_time": int(1000*submission.problem.time_limit),
+         "max_real_time": 5 * int(1000*submission.problem.time_limit),
          "max_memory": memory_limit,
          "language": submission.language.name,
          "max_output_size": int(submission.problem.max_output_size),
@@ -372,6 +416,7 @@ def judge_background(submission_id, rejudge=False, public=False, previous_result
       rank_update(submission)
       update_statistics(submission)
    else:
+      rejudge_testcase_output(judge_server_result['data'], submission) 
       if not public:
          update_score_and_rank(submission)
       else:

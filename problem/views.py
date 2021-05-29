@@ -181,6 +181,10 @@ def testcase(request, problem_id):
     problem = Problem.objects.get(pk=problem_id)
     test_case = TestCase.objects.filter(problem=problem)
     test_case = sorted(test_case, key=lambda x: lambda_sort(x))
+    if test_case[-1].name[1:].isdigit():
+        name = 't'+str(int(test_case[-1].name[1:]) + 1)
+    else:
+        name = test_case[-1].name + '1'
     if request.method == "POST":
         error_list = []
         for i in test_case:
@@ -207,7 +211,6 @@ def testcase(request, problem_id):
         if form.is_valid():
             post = form.save(commit=False)
 
-            name = 't'+str(len(test_case)+1)
             post.problem = problem
             post.name = name
             post.save()

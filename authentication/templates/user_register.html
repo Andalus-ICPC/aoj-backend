@@ -4,34 +4,110 @@
 {% block title%}User Register{% endblock %}
 {% block content %}  
 {% load static %} 
-<div style="margin-left: 5%;  margin-right: 25%;" >
-	
-	<div class="card">
-	    <div class="card-header" style="font-size: 18px;"> 
-	        <strong>USER REGISTRATION FORM</strong> 
-	        <ul class="object-tools" style="position: absolute;top: 60px; right: 15px;">
-	           <li> 
-	           	<form  method="POST" enctype="multipart/form-data" novalidate action="{% url 'user_register_csv' %}">
-            		{% csrf_token %}
-            		{% for field in form1.visible_fields %}
-            			<strong>{{ 'CSV file format' }}</strong>
-            			{{ field }}
-                        {{ field.errors }}
-    			    {% endfor %}
-    			    <button type="submit" name="button" class="ur-btn" style="position: absolute;top: 4px; right: 0px;">Upload</button>
-            	</form>
-	           	
-	           </li>
-	       </ul>
-	    </div>
 
-	    <form method="POST" novalidate action="{% url 'user_register' %}">
-	        {% csrf_token %}
-				{% include 'horizontal_form.html' %}
-	            <input type="submit" value="Register" style="margin-left: 27%;">
-	            <input type="hidden" name="next" value="{{ next }}">    
-	    </form>
-	        
-	    </div>
+
+<style>
+	.wrapper {
+		width: 50%;
+		margin: 0 auto;
+	}
+
+	.register-user .card-header {
+        display: flex;
+        justify-content: space-between !important;
+        height: 4em;
+        align-items: center;
+    }
+
+    .register-user .card-header h1 {
+        margin: 0 !important;
+        font-weight: 400;
+    }
+
+    .register-user .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.4em 1em;
+        border-radius: 0.2em;;
+    }    
+
+    .register-user .card-header h3 {
+        margin: 0 !important;
+        font-size: 1em;
+        font-weight: 400;
+        margin-right: 1em !important;
+        color: #333;
+    }
+    .register-user .user-form-group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f1f1f1 !important;
+        padding: 0.4em 1em;
+        border-radius: 0.2em;;
+    }    
+
+    .register-user .user-form-group h3 {
+        margin: 0 !important;
+        font-size: 0.9em;
+        font-weight: 400;
+        margin-right: 1em !important;
+        color: #333;
+    }
+
+    .register-user .card-header button {
+        font-size: 14px;
+        display: inline-block;
+        margin: 0;
+        position: unset !important;
+        border: none;
+        padding: 0.4em 1.8em !important;
+        background-color: #007bff;
+        border-radius: 0.2em;
+        color: #FFF;
+    }
+
+    .register-user .card-header form {
+        display: flex;
+    }
+
+    .register-user .card-header form input {
+        /* border: 0.1em solid #D1D1D1; */
+        margin-right: 0.8em;
+        padding: 0.6em;
+    }
+
+</style>
+<div class="wrapper">
+	<div class="card register-user">
+	<div class="card-header" style="font-size: 18px;"> 
+		<h1>USER REGISTRATION FORM</h1> 
+		<div class="user-form-group">
+			<h3>Upload by CSV</h3>
+			<form  method="POST" enctype="multipart/form-data" novalidate action="{% url 'user_register_csv' %}">
+				{% csrf_token %}
+				{% for field in form1.visible_fields %}
+				<div class="field-group">
+					<div class="input-field">
+						{{ field }}
+					</div>
+					<div class="field-errors">
+						{{ field.errors }}
+					</div>
+				</div>
+				{% endfor %}
+				<button type="submit" name="button" class="ur-btn" style="position: absolute;top: 4px; right: 0px;">Upload</button>
+			</form>
+		</div>
 	</div>
+	
+	<form method="POST" novalidate action="{% url 'user_register' %}">
+		{% csrf_token %}
+			{% include 'horizontal_form.html' %}
+			<input type="submit" value="Register" style="margin-left: 27%; margin-top: 2%;">
+			<input type="hidden" name="next" value="{{ next }}">    
+	</form>		
+	</div>
+</div>
 {% endblock %}

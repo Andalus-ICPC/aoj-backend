@@ -1457,7 +1457,7 @@ def ajax_rejudge(request):
             submit = Submit.objects.get(pk=submit_id)
             if submit.result == "Judging":
                 result_dict[submit_id] = "Judging *"
-                continue
+                # continue
             if os.path.exists(submit.submit_file.path):
                 submit.result = "Judging"
                 submit.save()

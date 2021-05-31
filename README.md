@@ -21,16 +21,6 @@ The following clones the backend
 git clone https://github.com/Andalus-ICPC/aoj-backend.git
 ```
 
-The following clones the judger
-```sh
-git clone https://github.com/Andalus-ICPC/aoj-judger.git
-```
-
-The following clones the sandbox
-```sh
-git clone https://github.com/Andalus-ICPC/SandboxCommandRunner.git
-```
-
 The following clones redis
 ```sh
 git clone https://github.com/redis/redis.git
@@ -67,57 +57,6 @@ pip install -r requirements.txt
 But if you are on linux and you are getting an error, try the following command
 ```sh
 pip3 install -r requirements.txt
-```
-
-- For the judger
-
-```sh
-cd aoj-judger
-```
-
-Now create a virtual environment
-```sh
-python -m virtualenv env
-```
-But if you are on linux and you are getting an error, try the following command
-```sh
-python3 -m virtualenv env
-```
-This will create a vritual environment named `env` inside `aoj-backend`
-
-Activate the virtual environment
-For linux
-```sh
-source /env/bin/activate
-```
-
-Then install all the requirements
-```sh
-pip install -r requirements.txt
-```
-But if you are on linux and you are getting an error, try the following command
-```sh
-pip3 install -r requirements.txt
-```
-
-- For the sandbox
-
-```sh
-cd SandboxCommandRunner
-```
-
-Here we don't need any virtual environment, we just execute the following commands.
-
-```sh
-sudo apt-get install libseccomp-dev
-```
-
-```sh
-mkdir build && cd build && cmake .. && make && sudo make install && cd ..
-```
-
-```sh
-sudo python3 bindings/python/setup.py install
 ```
 
 - For redis
@@ -159,17 +98,6 @@ You will get these lines:
 
 **Change** `/home/andalus/Documents/django/Andalus-Judge-Repo/` to the path where your `redis` lives.
 
-- Now go to `aoj-judger` and setup where and how to run one script
-
-Inside the `start-and-run-flask` folder, you will get 1 file, `flask_run`
-
-```
-source /home/andalus/Documents/django/Andalus-Judge-Repo/aoj-judger/env/bin/activate && cd /home/andalus/Documents/django/Andalus-Judge-Repo/aoj-judger && export FLASK_APP=/home/andalus/Documents/django/Andalus-Judge-Repo/aoj-judger/server.py && flask run -h 0 -p 5000
-
-# run as root
-```
-
-**Change** `/home/andalus/Documents/django/Andalus-Judge-Repo/aoj-judger/` to the path where your `aoj-judger` lives.
 
 ##### Step 5: Last Configuration, configuring the environment variable
 First configure your database, our system uses postgres by default, but you can use mysql or any other django supported databases
@@ -214,20 +142,4 @@ bash django
 
 ```sh
 bash redis
-```
-
-Then for the `judger`
-
-```sh
-cd aoj-judger/start-and-run-flask
-```
-
-```sh
-sudo su
-```
-
-After you enter your credentials
-
-```sh
-bash flask_run
 ```

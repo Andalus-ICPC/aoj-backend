@@ -1,6 +1,0 @@
-# to start the celery worker run the below command from AOJ directory 
-# concurrency is number of child processes
-celery -A AOJ worker -l INFO --concurrency=10
-
-# install and run redis-server  which is a broker which celery won't work without
-

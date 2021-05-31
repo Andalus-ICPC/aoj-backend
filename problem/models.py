@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 from time import time
 from authentication.validators import validate_problem_file_extension,\
@@ -32,6 +32,9 @@ class Problem(models.Model):
     memory_limit = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
                                        validators=[MinValueValidator(Decimal('0.01'))],
                                        help_text='Enter memory limit in mega bytes')
+    max_output_size = models.PositiveIntegerField(
+                                                validators=[MaxValueValidator(1048576)], default=1048576, 
+                                                help_text="max output size in byte")
     ballon = models.CharField(max_length=10, default="#ffffff")
     error = models.DecimalField(default=0.0, decimal_places=20, max_digits=22,
                                        validators=[MinValueValidator(Decimal('0.00'))],
@@ -50,6 +53,7 @@ class TestCase(models.Model):
                                                                                                     
     class Meta:
         unique_together = ('problem', 'input', 'output')
+        unique_together = ('problem', 'name')
 
     def __str__(self):
         return self.problem.title + ' test case ' + self.name

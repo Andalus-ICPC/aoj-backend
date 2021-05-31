@@ -164,7 +164,22 @@
 
 
 <div class="wrapper-2">
-
+    {% if form.non_field_errors %}
+        <table class="form-error">
+            {% for error in form.non_field_errors%}
+            <tr><td><b> {{ error}}</b></td></tr>
+            {% endfor %}
+        </table>
+        <br>
+    {% endif %}  
+    {% if form1.non_field_errors %}
+        <table class="form-error">
+            {% for error in form1.non_field_errors%}
+            <tr><td><b> {{ error}}</b></td></tr>
+            {% endfor %}
+        </table>
+        <br>
+    {% endif %} 
     <div class="file-upload">
         <form method="POST" enctype="multipart/form-data"  action="{% url 'public_submit' %}">
             {% csrf_token %}
@@ -295,6 +310,8 @@
                     <td>{{i.language}}</td>
                     {%if i.result == 'Correct'%}
                         <td style="color:green;">{{i.result}}</td>
+                    {%elif i.result == "Judging"%}
+                        <td style="color:rgb(161, 16, 161);">{{i.result}}</td>    
                     {%else%}
                         <td style="color:red;">{{i.result}}</td>
                     {%endif%}
@@ -317,7 +334,43 @@
                 </div>
             {%endfor%}
             </table>
-        
+            
+            <!-- pagination -->
+            {% if all_submits.has_other_pages %}
+                {% load proper_paginate %}
+                {% load url_replace %}
+                <ul class="pagination">
+                    {% if all_submits.number == 1 %}
+                        <li class="disabled"><span>⇤</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                    {% endif %}
+                    {% if all_submits.has_previous %}
+                        
+                        <li><a class="page-link" href="?{% url_replace request 'page' all_submits.previous_page_number %}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in paginator|proper_paginate:all_submits.number%}
+                        {% if all_submits.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if all_submits.has_next %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' all_submits.next_page_number %}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                    {% if all_submits.number == paginator.num_pages %}
+                        <li class="disabled"><span>⇥</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- end pagination -->   
 
         <div>
         </div>
@@ -355,10 +408,10 @@
         var extension = file.split('\\').slice(-1)[0].split('.')[1];
         var file_name = file.split('\\').slice(-1)[0].split('.')[0].toLowerCase();
 
-        // console.log(name, extension);
+        // console.log(file_name, extension);
         
         if(!langage_selector){
-            var url = "{% url 'ajax_get_language_list' %}";
+            var url = "{% url 'public_ajax_get_language_list' %}";
             $.ajax({
                 url: url,
                 data: {},
@@ -383,13 +436,13 @@
 
                     let best_problem = null;
                     for(let i=0; i< problem_list.length; i++){
-                        if(problem_list[i][1] == file_name || problem_list[i][2] == file_name){
+                        if(problem_list[i][1] == file_name){
                             best_problem = problem_list[i][0];
                             break;
                         }
                     }
                     all_problem_list = document.getElementById("id_problem");
-                    for (let c = 0; c < problem_list.length; c++) {
+                    for (let c = 0; c < all_problem_list.length; c++) {
                         if (all_problem_list.options[c].value == best_problem) {
                             all_problem_list.options[c].selected = true;
                             break;
@@ -420,7 +473,7 @@
 
             let best_problem = null;
             for(let i=0; i< problem_list.length; i++){
-                if(problem_list[i][1] == file_name || problem_list[i][2] == file_name){
+                if(problem_list[i][1] == file_name){
                     best_problem = problem_list[i][0];
                     break;
                 }

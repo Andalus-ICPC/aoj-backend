@@ -11,11 +11,11 @@
 
         <tr>
             <td > <strong>Username: </strong></td>
-            <td > {{submit.user.username}} </td>
+            <td > {{this_submit.user.username}} </td>
         </tr>
         <tr>
             <td > <strong>Submit Real Time: </strong></td>
-            <td > {{submit.submit_time}} </td>
+            <td > {{this_submit.submit_time}} </td>
         </tr>
         <tr>
             <td > <strong>Submit Contest Time: </strong></td>
@@ -23,23 +23,25 @@
         </tr>
         <tr>
             <td > <strong>Result: </strong></td>
-            {% if submit.result == "Correct" %}
-            <td style="color: green;"> {{submit.result}} </td>
+            {% if this_submit.result == "Correct" %}
+            <td style="color: green;"> {{this_submit.result}} </td>
+            {%elif this_submit.result == "Judging"%}
+                <td style="color:rgb(161, 16, 161);">{{i.result}}</td>
             {% else %}
-            <td style="color: red;"> {{submit.result}} </td>
+            <td style="color: red;"> {{this_submit.result}} </td>
             {% endif %}
         </tr>
         <tr>
             <td > <strong>Contest: </strong></td>
-            <td > {{submit.contest.title}} </td>
+            <td > {{this_submit.contest.title}} </td>
         </tr>
         <tr>
             <td > <strong>Problem: </strong></td>
-            <td > {{submit.problem.title}} </td>
+            <td > {{this_submit.problem.title}} </td>
         </tr>
         <tr>
             <td > <strong>Language: </strong></td>
-            <td > {{submit.language.name}} </td>
+            <td > {{this_submit.language.name}} </td>
         </tr>
 
     </table>
@@ -47,7 +49,7 @@
 
 <div class="col-md-6" style="margin-left: 5%;margin-top: 2%;">
     {% if not submit_file %}
-    <h4> file <small> <u>{{file_name}}</u> </small> is not supported file format for {{submit.language.name}}
+    <h4> file <small> <u>{{file_name}}</u> </small> is not supported file format for {{this_submit.language.name}}
         language</h4>
     {% else %}
     <strong>{{'source code:'|upper}} <u>{{file_name}}</u></strong>
@@ -77,12 +79,12 @@
     <!-- @@@@@@@@@@@@@@@@@ -->
 
     {% if base_page == "admin_base_site.html" %}
-    <a class="btn btn-outline-info" href="{% url 'single_rejudge' submit_id=submit.id %}"
-        style="float: right;margin-top:10px;margin-bottom:30px; width: 200px;">rejudge</a>
+    <a class="btn btn-outline-info" href="{% url 'single_rejudge' submit_id=this_submit.id %}"
+        style="float: right;margin-top:10px;margin-bottom:30px; width: 200px; font-size: 16px">rejudge</a>
     {% endif %}
 
     <button class="btn btn-secondary"
-        style="float: right;margin-right:20px;margin-top:10px;margin-bottom:30px; width: 100px;"
+        style="float: right;margin-right:20px;margin-top:10px;margin-bottom:30px; width: 100px; font-size: 16px;"
         onclick="copyFunction()" title="copy code to clipboard">copy
     </button>
     
@@ -92,7 +94,7 @@
 
 <div class="col-md-10" style="margin-left: 5%; margin-top:200px; margin-bottom: 100px;">
     <div class="tab">
-        {% for id, result, answer, input_file, output_file, user_output_file, time in submit_detail %}
+        {% for id, result, answer, input_file, output_file, user_output_file, time, memory in submit_detail %}
         {% if result == "Correct" %}
         <button class="tablinks" onclick="openTestacse(event, '{{id}}')" title="correct"> <img
                 src="{% static 'Images/icons/Ok.png' %}" height="30" width="30"></button>
@@ -107,7 +109,7 @@
     </div>
 
 
-    {% for id, result, answer, input_file, output_file, user_output_file, time in submit_detail %}
+    {% for id, result, answer, input_file, output_file, user_output_file, time, memory in submit_detail %}
     <div id="tab-{{id}}" class="tabcontent">
         <div class="tab">
             {% if result == "Correct" %}
@@ -116,10 +118,11 @@
             <label><strong>Result:&nbsp;&nbsp;&nbsp;</strong> </label><label style="color:red;"> {{result}} </label>
             {% endif %}
             {% if not result == "Not Run" %}
-            {% if not time == 0 %}
-            <label style="margin-left:3%;"><strong>Execution time:&nbsp;&nbsp;&nbsp;</strong> </label><label>
-                {{time}} </label>
-            {% endif %}
+            <label style="margin-left:3%;"><strong>CPU time:&nbsp;&nbsp;&nbsp;</strong> </label><label>
+                {{time}}s </label>
+            <label style="margin-left:3%;"><strong>Memory Usage:&nbsp;&nbsp;&nbsp;</strong> </label><label>
+                    {{memory}}b </label>
+
 
             <label style="margin-left:3%;"><strong>testcase input:&nbsp;&nbsp;&nbsp;&nbsp;</strong></label><a
                 href="{{input_file.0}}">{{input_file.1}}</a>

@@ -7,53 +7,101 @@
 
 <script  src="{% static 'files/jsi18n.js' %}"> </script>   
 
-<div class="col-sm-6 col-centered" style="margin-top: 2em;">
-    <h5 class="ur-card-title" style="font-size: 2em;">contest list</h5>
+<div class="card" style="margin-left: 2em;  margin-right: 2em; margin-top: 2em;">
+    <div class="card-header" style="font-size: 18px;"> 
+        <strong>CONTEST LIST</strong> 
+   
+    </div>
     <table class="table table-striped" >
         <thead class="table-info">
             <tr>
-                <th ><strong>title</strong></th>
+                <th ><strong>No.</strong></th>
+                <th ><strong>title of contest</strong></th>
+                <th ><strong>active time</strong></th>
                 <th ><strong>start time</strong></th>
+                <th ><strong>end time</strong></th>
+                <th ><strong>deactivate time</strong></th>
                 <th ><strong>created by</strong></th>
-                <th ><strong>status</strong></th>
+                <th ><strong>Status</strong></th>
+
+            
             </tr>
         </thead>
         {% for i in contest %}
-                <tr>
-                    <td ><a href="{% url 'jury_contest_detail' i.id %}" style="text-decoration: none;">{{i.title}}</a></td>
-                    <td >{{i.start_time}}</td>
-                    <td >{{i.created_by}}</td>
-                    {% if i.status == "on going" %}
-                        <td style="color:green;">
-                            {{i.status}}
-                            <a href="{% url 'deactivate_contest_scoreboard' i.id %}" style="text-decoration: none; float:right;margin-right:2em;">view result</a>                           
-                        </td>
-                    {% elif i.status == "active" %}
-                        <td style="color:black;">{{i.status}}</td>
-                    {% elif i.status == "not active" %}
-                        <td style="color:gray;">{{i.status}}</td>
-                    {% elif i.status == "end" %}
-                        <td style="color:blue;">
-                            {{i.status}}
-                            <a href="{% url 'deactivate_contest_scoreboard' i.id %}" style="text-decoration: none; float:right;margin-right:2em;">view result</a>                           
-                        </td>
-                    {% elif i.status == "deactivate" %}
-                        <td style="color:red;">
-                            {{i.status}}
-                            <a href="{% url 'deactivate_contest_scoreboard' i.id %}" style="text-decoration: none; float:right;margin-right:2em;">view result</a>
-                        </td>
-                    {% elif i.status == "disable"%}
-                        <td style="color:#a0a;">{{i.status}}</td>
-                    {% endif %}
+            <tr>
+                <td>{{forloop.counter}}</td>
+                <td ><a href="{% url 'jury_contest_detail' i.id %}" style="text-decoration: none;">{{i.title}}</a></td>
+                <td >{{i.active_time}}</td>
+                <td >{{i.start_time}}</td>
+                <td >{{i.end_time}}</td>
+                <td >{{i.deactivate_time}}</td>
+                <td >{{i.created_by}}</td>
+                {% if i.status == "on going" %}
+                    <td style="color:green;">
+                        {{i.status}}
+                        <a href="{% url 'deactivate_contest_scoreboard' i.id %}" style="text-decoration: none; float:right;margin-right:2em;">Result</a>
+                    </td>
+                {% elif i.status == "active" %}
+                    <td style="color:black;">{{i.status}}</td>
+                {% elif i.status == "not active" %}
+                    <td style="color:gray;">{{i.status}}</td>
+                {% elif i.status == "end" %}
+                    <td style="color:blue;">
+                        {{i.status}}
+                        <a href="{% url 'deactivate_contest_scoreboard' i.id %}" style="text-decoration: none; float:right;margin-right:2em;">Result</a>                           
+                    </td>
+                {% elif i.status == "deactivate" %}
+                    <td style="color:red;">
+                        {{i.status}}
+                        <a href="{% url 'deactivate_contest_scoreboard' i.id %}" style="text-decoration: none; float:right;margin-right:2em;">Result</a>
+                    </td>
+                {% elif i.status == "disable"%}
+                    <td style="color:#a0a;">{{i.status}}</td>
+                {% endif %}
 
-                </tr>
-            
+            </tr>
+        
         {% endfor %}
     </table>
-    
+
+    {% if contest.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if contest.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if contest.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace request 'page' contest.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:contest.number%}
+                {% if contest.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if contest.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' contest.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if contest.number == paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
 </div>
 
 
 {% endblock %}
 
+   
    

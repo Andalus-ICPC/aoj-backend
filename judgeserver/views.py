@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, HttpResponse
 import requests
 from django.contrib import messages
-from authentication.decorators import admin_auth
+from authentication.decorators import admin_auth, admin_auth_and_server_exist
 from django.contrib.auth.decorators import login_required
 from problem.models import Problem, TestCase
 import requests
@@ -20,71 +20,127 @@ import json
 def judgeserver_list(request):
    judgeservers = JudgeServer.objects.all()
    for judgeserver in judgeservers:
+      if not judgeserver.is_enabled:
+         continue
       try:
-         info = requests.get(judgeserver.address + '/info').json()
+         info = requests.get(judgeserver.address + '/info', timeout=10).json()
          judgeserver.server_name = info['hostname']
          judgeserver.server_cpu_number = info['cpu_core']
          judgeserver.server_cpu_usage = info['cpu']
-         judgeserver.status = 'normal'
+         judgeserver.status = 'Normal'
          judgeserver.command_runner_version = info['CommandRunner_version']
          judgeserver.save()
-         print()
-         print()
-         print(info)
+
+         pro = {i for i in judgeserver.problem.all()}
+         problem = {i for i in Problem.objects.all()}
+         if problem.difference(pro):
+            judgeserver.dump = True
+         else:
+            judgeserver.dump = False
+         judgeserver.save()
+
       except Exception as e:
          judgeserver.server_name = 'unknown'
          judgeserver.server_cpu_number = None
          judgeserver.server_cpu_usage = None
          judgeserver.command_runner_version = 'unknown'
-         judgeserver.status = 'abnormal'
+         judgeserver.status = 'Abnormal'
+         judgeserver.dump = False
          judgeserver.save()
 
-   return render(request, 'judgeserver_list.html', {'judgeservers': judgeservers})
+   return render(request, 'judgeserver_list.html', {'judgeservers': judgeservers, 'server': 'hover'})
 
 
-# @login_required
-# @admin_auth
+@login_required
+@admin_auth
 def add_judgeserver(request):
-    if request.method == "POST":
-        form = AddJudgeserver(request.POST)
-        if form.is_valid():
+   if request.method == "POST":
+         form = AddJudgeserver(request.POST)
+         if form.is_valid():
             post = form.save(commit=False)
             post.save()
+            try:
+               info = requests.get(post.address + '/info', timeout=10).json()
+               form.save_m2m()
+               for problem in post.problem.all():
+                  testcase_transfer_to_server(post, problem)
+               messages.success(request, "The server " +
+                              post.address+" was registered successfully.")
+            except:
+               messages.success(request, "The server " +
+                              post.address+" was registered successfully, but the server is not connected.")
             return redirect('judgeserver_list')
-    else:
+   else:
         form = AddJudgeserver()
-    return render(request, 'add_judgeserver.html', {'form': form, 'cont': 'hover'})
+   return render(request, 'add_judgeserver.html', {'form': form, 'server': 'hover'})
 
 @admin_auth
+@admin_auth_and_server_exist
 def edit_judgeserver(request, judgeserver_id):
    judgeserver = JudgeServer.objects.get(pk=judgeserver_id)
+   past_problem = {i for i in judgeserver.problem.all()}
    if request.method == "POST":
       form = AddJudgeserver(request.POST, instance=judgeserver)
     
       if form.is_valid():
          post = form.save(commit=False)
          post.save()
+         try:
+            info = requests.get(post.address + '/info', timeout=10).json()
+            form.save_m2m()
+            current_problem = {i for i in post.problem.all()}
+
+            upload_problem = current_problem.difference(past_problem)
+            remove_problem = past_problem.difference(current_problem)
+            for problem in upload_problem:
+               testcase_transfer_to_server(post, problem)
+            
+            try:
+               requests.get(judgeserver.address + '/info', timeout=10).json()
+               for problem in remove_problem:
+                     try:
+                        requests.post(post.address + "/remove_testcase",  data={'testcase_id': str(problem.id)}, timeout=10)
+                     except:
+                        pass
+            except Exception:
+               pass
+            messages.success(request, "The server " +
+                              post.address+" was update successfully.")
+         except:
+               messages.success(request, "The server " +
+                              post.address+" was update successfully, but the server is not connected.")
+               
          return redirect('judgeserver_list')
    else:
       form = AddJudgeserver(instance=judgeserver)
-   return render(request, 'edit_judgeserver.html', {'form': form, 'judgeserver_id': judgeserver.id, 'cont': 'hover'})
+   return render(request, 'edit_judgeserver.html', {'form': form, 'judgeserver_id': judgeserver.id, 'server': 'hover'})
 
 
-# @login_required
-# @admin_auth_and_contest_exist
+@login_required
+@admin_auth_and_server_exist
 def delete_judgeserver(request, judgeserver_id):
     judgeserver = JudgeServer.objects.get(pk=judgeserver_id)
-    return render(request, 'delete_judgeserver.html', {'judgeserver': judgeserver, 'cont': 'hover'})
+    return render(request, 'delete_judgeserver.html', {'judgeserver': judgeserver, 'server': 'hover'})
 
 
-# @login_required
-# @admin_auth_and_contest_exist
+@login_required
+@admin_auth_and_server_exist
 def delete_judgeserver_done(request, judgeserver_id):
-    judgeserver = JudgeServer.objects.get(id=judgeserver_id)
-    judgeserver.delete()
-    messages.success(request, "The judgeserver " +
+   judgeserver = JudgeServer.objects.get(id=judgeserver_id)
+   try:
+      requests.get(judgeserver.address + '/info', timeout=10).json()
+      for problem in judgeserver.problem.all():
+         try:
+            requests.post(judgeserver.address + "/remove_testcase",  data={'testcase_id': str(problem.id)}, timeout=10)
+         except:
+            pass
+   except Exception:
+      pass
+
+   judgeserver.delete()
+   messages.success(request, "The judgeserver " +
                      judgeserver.address + " was deleted successfully.")
-    return redirect('judgeserver_list')
+   return redirect('judgeserver_list')
 
 
 def _get_sha256(output_file):
@@ -121,37 +177,50 @@ def testcase_info(problem, path):
    return info
 
 
-# @admin_auth
+@login_required
+@admin_auth_and_server_exist
 def dump_judgeserver(request, judgeserver_id):
    judgeserver = JudgeServer.objects.get(pk=judgeserver_id)
+   try:
+      info = requests.get(judgeserver.address + '/info').json()
+   except:
+      messages.warning(request, "The server " +
+                     judgeserver.address + " is not connected.")
+      return redirect('judgeserver_list')
+   
    all_problem = [pro for pro in Problem.objects.all()]
    server_problem = [pro for pro in judgeserver.problem.all()]
    dump_problem = [pro for pro in all_problem if not pro in server_problem]
-   
-   BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-   # with ZipFile('testcases.zip', 'w') as zipObj2:
-      # Add multiple files to the zip
-      # zipObj2.write('sample_file.csv')
    for problem in dump_problem:
-      pro_path = problem.pdf.path
-      index = pro_path.rfind('/')
-      pro_path = pro_path[:index]
-      dirName = pro_path + "/testcase"
-
-      filePath = os.path.join(dirName, "info")
-      testcase_info(problem, filePath)
-      path = os.path.join(BASE_DIR, '%d.zip' %problem.id)
-      with ZipFile(path , 'w') as zipObj:
-         for folderName, subfolders, filenames in os.walk(dirName):
-            for filename in filenames:
-
-               filePath = os.path.join(folderName, filename)
-               zipObj.write(filePath,  basename(filePath))
-
-      requests.post(judgeserver.address + "/upload_testcase",  files={'file': open(path, "rb")}, data={'testcase_id': str(problem.id)})
-      judgeserver.problem.add(problem)
-      judgeserver.save()
-      os.remove(path)
+      testcase_transfer_to_server(judgeserver, problem)
+   messages.success(request, "The problem testcase was transfer to judgeserver " +
+                     judgeserver.address + " successfully.")
    return redirect('judgeserver_list')
   
+def testcase_transfer_to_server(judgeserver, problem):
+   BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+   pro_path = problem.pdf.path
+   index = pro_path.rfind('/')
+   pro_path = pro_path[:index]
+   dirName = pro_path + "/testcase"
+
+   filePath = os.path.join(dirName, "info")
+   testcase_info(problem, filePath)
+   path = os.path.join(BASE_DIR, '%d.zip' %problem.id)
+   with ZipFile(path , 'w') as zipObj:
+      for folderName, subfolders, filenames in os.walk(dirName):
+         for filename in filenames:
+
+            filePath = os.path.join(folderName, filename)
+            zipObj.write(filePath,  basename(filePath))
+   try:
+      requests.post(judgeserver.address + "/upload_testcase",  files={'file': open(path, "rb")}, data={'testcase_id': str(problem.id)})
+   except:
+      os.remove(path)
+      return
+   judgeserver.problem.add(problem)
+   judgeserver.save()
+   os.remove(path)
+
+

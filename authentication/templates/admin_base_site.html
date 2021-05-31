@@ -4,6 +4,9 @@
 <html lang="{{ LANGUAGE_CODE|default:'en-us' }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
 <head>
 <title>{% block title %}{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'files/bootstrap/css/bootstrap.css' %}"/>
+<script src="{% static 'files/bootstrap/js/bootstrap.js' %}" defer></script>
+
 <link rel="stylesheet" href="{% static 'assets/vendors/bootstrap/dist/css/bootstrap.min.css' %}"/>
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static 'admin/css/base.css' %}{% endblock %}">
 {% if not is_popup and is_nav_sidebar_enabled %}
@@ -90,8 +93,8 @@
           <a href="{% url 'contest' %}" class="header-item {{cont}}" style="text-decoration: none;">Contest</a>
           <a href="{% url 'jury_scoreboard' %}" class="header-item {{scor}}" style="text-decoration: none;">Scoreboard</a>
           <a href="{% url 'rejudge_contest_select' %}" class="header-item {{rejudge}}" style="text-decoration: none;">Rejudge</a>
-          <a href="{% url 'judgeserver_list' %}" class="header-item {{server}}" style="text-decoration: none;">Server</a>
           <a href="{% url 'view_submit_contest_select' %}" class="header-item {{submit}}" style="text-decoration: none;">Submission</a>
+          <a href="{% url 'judgeserver_list' %}" class="header-item {{server}}" style="text-decoration: none;">Server</a>
           <a href="{% url 'clarification_list' %}" class="header-item {{clar}}" style="text-decoration: none;">Clarification</a>
           <a href="{% url 'leaderboard' %}" class="header-item {{leaderboard}}" style="text-decoration: none;">Leaderboard</a>
           <a href="{% url 'rating' %}" class="header-item {{rating}}" style="text-decoration: none;">Rating</a>

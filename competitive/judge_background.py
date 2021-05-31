@@ -1,16 +1,20 @@
 # import dramatiq
 from AOJ.celery import app
 from django.utils import timezone
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import F
 from control.models import Setting
-
+from django.core.files import File
+import os
 from .forms import SubmitAnswer
 import requests
 from .models import Submit, Contest
 from judgeserver.models import JudgeServer
 from problem.views import update_statistics
-from competitive.models import RankcacheJury, RankcachePublic, ScorecacheJury, ScorecachePublic
+from competitive.models import RankcacheJury, RankcachePublic, ScorecacheJury, ScorecachePublic, TestcaseOutput
+from problem.models import TestCase
+from public.models import Statistics
+
 
 def time_gap(submit_time, contest_start_time):
     td = submit_time - contest_start_time
@@ -131,19 +135,211 @@ def rank_update(submit):
    this_contest.last_update = timezone.now()
    this_contest.save()   
 
+
+
+def update_rejudge_statistics(submit, previous_result):
+    new_result = submit.result
+    if new_result == "Correct": new_result = 1
+    else: new_result = 0
+    if previous_result == "Correct": previous_result = 1
+    else:previous_result = 0
+    
+    if new_result == previous_result:
+        return
+    try:
+        statistics = Statistics.objects.get(problem=submit.problem)
+    except Statistics.DoesNotExist:
+        return
+    if previous_result == 1:
+        statistics.accurate_submissions -= 1
+    elif new_result == 1:
+        statistics.accurate_submissions += 1
+    if previous_result == 1:
+        pre = Submit.objects.filter(user=submit.user, problem=submit.problem).exclude(pk=submit.pk)
+        if not pre.filter(result="Correct"):
+            statistics.accurate_users -= 1
+    if new_result == 1:
+        pre = Submit.objects.filter(user=submit.user, problem=submit.problem).exclude(pk=submit.pk)
+        if not pre.filter(result="Correct"):
+            statistics.accurate_users += 1
+    statistics.save()
+
+
+def update_score_and_rank(submit):
+   point = submit.problem.point
+   contest = submit.contest
+
+   rank_cache_jury = RankcacheJury.objects.get(
+      user=submit.user, contest=contest)
+   rank_cache_public = RankcachePublic.objects.get(
+      user=submit.user, contest=contest)
+   try:
+      score_cache_jury = ScorecacheJury.objects.get(
+         rank_cache=rank_cache_jury, problem=submit.problem)
+   except ScorecacheJury.DoesNotExist:
+      score_cache_jury = ScorecacheJury(
+         rank_cache=rank_cache_jury, problem=submit.problem)
+      score_cache_jury.save()
+
+   try:
+      score_cache_public = ScorecachePublic.objects.get(
+         rank_cache=rank_cache_public, problem=submit.problem)
+   except ScorecachePublic.DoesNotExist:
+      score_cache_public = ScorecachePublic(
+         rank_cache=rank_cache_public, problem=submit.problem)
+      score_cache_public.save()
+
+   punish_value, rating_correct_value, rating_punish_value = setting_values()
+   if score_cache_jury.is_correct:
+      rank_cache_jury.point -= point
+      rank_cache_jury.punish_time -= (punish_value * score_cache_jury.punish + time_gap(
+         score_cache_jury.correct_submit_time, contest.start_time))
+      rank_cache_jury.save()
+      if contest.has_value:  # rating update
+         user = submit.user
+         user.rating -= (rating_correct_value - rating_punish_value * score_cache_jury.punish)
+         user.save()
+
+   score_cache_jury.is_correct = False
+   score_cache_jury.punish = 0
+   score_cache_jury.submission = 0
+   score_cache_jury.correct_submit_time = None
+   score_cache_jury.save()
+
+   if score_cache_public.is_correct:
+      rank_cache_public.point -= point
+      rank_cache_public.punish_time -= (punish_value * score_cache_public.punish + time_gap(
+         score_cache_public.correct_submit_time, contest.start_time))
+      rank_cache_public.save()
+
+   score_cache_public.is_correct = False
+   score_cache_public.punish = 0
+   score_cache_public.submission = 0
+   score_cache_public.correct_submit_time = None
+   score_cache_public.pending = 0
+   score_cache_public.save()
+
+   # all_submit = Submit.objects.filter(user=submit.user, problem=submit.problem, contest=contest, submit_time__gte=contest.start_time,
+   #                                  submit_time__lte=contest.end_time).exclude(result="Judging").order_by('submit_time')
+   all_submit = Submit.objects.filter(user=submit.user, problem=submit.problem, contest=contest, submit_time__gte=contest.start_time,
+                                       submit_time__lte=contest.end_time).order_by('submit_time')
+
+   for sub in all_submit:
+      score_cache_jury.submission += 1
+      if sub.result == "Correct":
+         score_cache_jury.correct_submit_time = sub.submit_time
+         score_cache_jury.is_correct = True
+         rank_cache_jury.point += point
+         rank_cache_jury.punish_time += (punish_value * score_cache_jury.punish + time_gap(
+               score_cache_jury.correct_submit_time, contest.start_time))
+         rank_cache_jury.save()
+         break
+      elif not sub.result == "Compiler Error":
+         score_cache_jury.punish += 1
+   score_cache_jury.save()
+
+   for sub in all_submit:
+      if contest.frozen_time and contest.unfrozen_time and contest.frozen_time <= sub.submit_time and sub.submit_time < contest.unfrozen_time:
+         score_cache_public.submission += 1
+         score_cache_public.pending += 1
+         score_cache_public.save()
+      else:
+         rank_cache_public.point = rank_cache_jury.point
+         rank_cache_public.punish_time = rank_cache_jury.punish_time
+         rank_cache_public.save()
+
+         score_cache_public.submission = score_cache_jury.submission
+         score_cache_public.punish = score_cache_jury.punish
+         score_cache_public.correct_submit_time = score_cache_jury.correct_submit_time
+         score_cache_public.is_correct = score_cache_jury.is_correct
+         score_cache_public.save()
+
+   if contest.has_value and score_cache_jury.is_correct:  # rating update
+      user = submit.user
+      user.rating += (rating_correct_value - rating_punish_value * score_cache_jury.punish)
+      user.save()
+
+
+def testcase_output(result_list, submit):
+   result_dict ={0: 'Correct', 2: 'Time Limit Exceeded', 3: 'Time Limit Exceeded',
+                  -1: 'Wrong Answer', 4: 'Memory Limit Exceeded', 5: 'Run Time Error', 
+                  7: "No Output"}
+
+   testcase_info = {}
+   server = submit.server.address
+   for test in result_list:
+      cpu_time = test['cpu_time']/1000.0
+      memory = test['memory']
+      real_time = test['real_time']/1000.0
+      result = result_dict[test['result']]
+      testcase_name = test['testcase']
+      try:
+         testcase_instance = TestCase.objects.get(name=testcase_name, problem=submit.problem)
+         insert = TestcaseOutput(test_case=testcase_instance, result=result, submit=submit,
+            execution_time=cpu_time, memory_usage=memory)
+
+         insert.save()
+
+      except (TestCase.DoesNotExist, IntegrityError, FileNotFoundError) as e:
+         print(e)
+
+
+def rejudge_testcase_output(result_list, submit):
+   result_dict ={0: 'Correct', 2: 'Time Limit Exceeded', 3: 'Time Limit Exceeded',
+                  -1: 'Wrong Answer', 4: 'Memory Limit Exceeded', 5: 'Run Time Error', 
+                  7: "No Output"}
+
+   testcase_info = {}
+   server = submit.server.address
+
+   update_testcase = set()
+   for test in result_list:
+      cpu_time = test['cpu_time']/1000.0
+      memory = test['memory']
+      real_time = test['real_time']/1000.0
+      result = result_dict[test['result']]
+      testcase_name = test['testcase']
+      try:
+         testcase_instance = TestCase.objects.get(name=testcase_name, problem=submit.problem)
+         try:
+            insert = TestcaseOutput.objects.get(test_case=testcase_instance, submit=submit)
+            insert.result = result
+            insert.execution_time = cpu_time
+            insert.memory_usage = memory
+            insert.save()
+
+         except TestcaseOutput.DoesNotExist:
+            insert = TestcaseOutput(test_case=testcase_instance, result=result, submit=submit,
+               execution_time=cpu_time, memory_usage=memory)
+
+            insert.save()
+
+         update_testcase.add(testcase_instance)
+      except (TestCase.DoesNotExist, IntegrityError, FileNotFoundError) as e:
+         print(e)
+
+   old_testcase = {i.test_case for i in TestcaseOutput.objects.filter(submit=submit)}
+   remain = old_testcase.difference(update_testcase)
+   for testcase_instance in remain:
+      try:
+         output = TestcaseOutput.objects.get(test_case=testcase_instance, submit=submit)
+         output.delete()
+      except TestcaseOutput.DoesNotExist:
+         pass
+
+
+
+
 class ChooseJudgeServer:
    def __init__(self):
       self.server = None
 
    def __enter__(self) -> [JudgeServer, None]:
       with transaction.atomic():
-         servers = JudgeServer.objects.select_for_update().filter(is_enabled=True).order_by("load")
-         servers = [s for s in servers if s.status == "normal"]
+         servers = JudgeServer.objects.select_for_update().filter(status="Normal", is_enabled=True).order_by("load")
+         servers = [s for s in servers]
          for server in servers:
-            # if server.load <= server.server_cpu_number * 2:
             server.load = F("load") + 1
-            # server.load += 1
-            # server.save()
             server.save(update_fields=["load"])
             self.server = server
             return server
@@ -157,67 +353,71 @@ class ChooseJudgeServer:
 
 # @dramatiq.actor
 @app.task
-def judge_background(submission_id):
+def judge_background(submission_id, rejudge=False, public=False, previous_result=None):
    submission = Submit.objects.get(id=submission_id)
-   print(submission.language)
-   # post = form.save(commit=False)
-  
+
    with ChooseJudgeServer() as server:
       url = server.address + "/judge"
-      try:
-         with open(submission.submit_file.path, 'r') as f:
-            content = f.read()
-         # kwargs = {"headers": {"X-Judge-Server-Token": 'amir'}}
-         kwargs = {}
-         temp_data= {
-            # "headers": {"X-Judge-Server-Token": 'amir'},
-            "src_code": content,
-            "testcase_id": str(submission.problem.id),
-            # "max_cpu_time": int(10000 * submission.problem.time_limit),
-            "max_real_time": int(1000000 * submission.problem.time_limit),
-            "max_memory": submission.problem.memory_limit,
-            "language": submission.language.name,
-            # "language": 'cpp'
-         }
-         # print(temp_data)
-         kwargs['json'] = temp_data
-         
-         judge_server_result = requests.get(url, **kwargs).json()
-         
-         # print('hello')
-         # print(type(judge_server_result))
-         # print(judge_server_result)
-         # print(judge_server_result['success'])
-         # print()
-         if judge_server_result['success']:
-            for item in judge_server_result['data']:
-               if item['result'] == 0:
-                  total_result = 'Correct'
-                  continue
-               elif item['result'] == 2 or item['result'] == 3:
-                  total_result = 'Time Limit Exceeded'
-                  break
-               elif item['result'] == 4:
-                  total_result = 'Memory Limit Exceeded'
-                  break
-               elif item['result'] == 5:
-                  total_result = 'Runtime Error'
-                  break
-               elif item['result'] == -1:
-                  total_result = 'Wrong Answer'
-                  break
-            submission.result = total_result
-         elif judge_server_result['error'] == 'CompileError':
-            submission.result = "Compile Error"
-            
-      except Exception as e:
-         # result = judge(file_name=post.submit_file.path,
-         #             problem=post.problem, language=post.language, submit=post)
-         # post.result = result
-         # print(e)
-         pass
+      
+      with open(submission.submit_file.path, 'r') as f:
+         content = f.read()
+      kwargs = {}
+      memory_limit = submission.problem.memory_limit
+      if memory_limit: memory_limit = int(round(float(memory_limit)))
+      temp_data= {
+         # "headers": {"X-Judge-Server-Token": 'amir'},
+         "src_code": content,
+         "testcase_id": str(submission.problem.id),
+         "max_cpu_time": int(1000*submission.problem.time_limit),
+         "max_real_time": 5 * int(1000*submission.problem.time_limit),
+         "max_memory": memory_limit,
+         "language": submission.language.name,
+         "max_output_size": int(submission.problem.max_output_size),
+         "absolute_error": float(submission.problem.error),
+      }
+      kwargs['json'] = temp_data
+      judge_server_result = requests.get(url, **kwargs).json()
+      
+      # print(judge_server_result)
+      submission.server = server
+      submission.output_path = judge_server_result["user_output_path"]
+      submission.save()
 
-
+      if judge_server_result['success']:
+         for item in judge_server_result['data']:
+            if item['result'] == 0:
+               total_result = 'Correct'
+               continue
+            elif item['result'] == 2 or item['result'] == 3:
+               total_result = 'Time Limit Exceeded'
+               break
+            elif item['result'] == 4:
+               total_result = 'Memory Limit Exceeded'
+               break
+            elif item['result'] == 5:
+               total_result = 'Run Time Error'
+               break
+            elif item['result'] == -1:
+               total_result = 'Wrong Answer'
+               break
+            elif item['result'] == 7:
+               total_result = 'No Output'
+               break
+         submission.result = total_result
+         
+      elif judge_server_result['error'] == 'CompileError':
+         submission.result = "Compiler Error"
+      elif judge_server_result['error'] == 'Exception':
+         submission.result = "Run Time Error"
    submission.save()
-   rank_update(submission)
-   update_statistics(submission)
+
+   if not rejudge:
+      testcase_output(judge_server_result['data'], submission) 
+      rank_update(submission)
+      update_statistics(submission)
+   else:
+      rejudge_testcase_output(judge_server_result['data'], submission) 
+      if not public:
+         update_score_and_rank(submission)
+      else:
+         update_rejudge_statistics(submission, previous_result)

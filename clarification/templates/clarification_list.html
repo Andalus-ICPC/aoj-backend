@@ -11,12 +11,12 @@
         <h5 class="ur-card-title" style="font-size: 2em;">There is no active contest</h5>
     </div>
 {% else %}
-<div class="card" style="margin-left: 1%;  margin-right: 1%;margin-top:2%;%" >
+<div class="card" style="margin-left: 1%;  margin-right: 1%;margin-top:2%;" >
     <div class="card-header titles" style="font-size: 18px;" > 
 	    <strong>CLARIFICATION REQUEST LIST</strong> 
      
-    <a class = "btn btn-outline-primary" href="{% url 'new_clarification' %}" style="float:right;">new clarification</a>
-    <a class = "btn btn-outline-primary" href="{% url 'answered_clarification' %}" style="float:right; margin-right:20%;%">answered clarifications</a>
+    <a class = "btn btn-outline-primary" href="{% url 'new_clarification' %}" style="float:right;font-size: 16px">new clarification</a>
+    <a class = "btn btn-outline-primary" href="{% url 'answered_clarification' %}" style="float:right; margin-right:20%;">answered clarifications</a>
     
         {% if all_clarification %}
         <table class="table table-light" >
@@ -45,11 +45,48 @@
 
                         <td>{{i.user.username}}</td>
                         <td>{{i.short_question}}</td>
-                        <td><a href="{% url 'clarification_answer' i.id %}" style="margin-right:20px;" title="answer"> <img src="{% static 'Images/icons/view_detail.png' %}" height="20" width="20"></a></td>
+                        <td><a href="{% url 'clarification_answer' i.id page_number %}" style="margin-right:20px;" title="answer"> <img src="{% static 'Images/icons/view_detail.png' %}" height="20" width="20"></a></td>
                 </tr>
                  
             {%endfor%}
         </table>
+        
+        <!-- pagination -->
+        {% if all_clarification.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if all_clarification.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if all_clarification.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_clarification.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:all_clarification.number%}
+                    {% if all_clarification.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if all_clarification.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_clarification.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if all_clarification.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->          
         {% else %}
         <div class="container nocontest">
             <h5 class="ur-card-title" style="font-size: 1em;">There is no new clarification request for this contest</h5>

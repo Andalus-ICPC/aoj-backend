@@ -4,96 +4,192 @@
 {% block content %}
 {% load static %}
 {% load widget_tweaks %}
-
-<div class="row">
-
-    <div class="col-sm-5 col-centered" style="margin-top: 2em; margin-left:10em;">
-        <h2>Detail Contest: {{this_contest.title}}</h2><br>
-        <table style="font-size:15px; width:100%;" class="table table-light"> 
-            <tr>
-                <td style="width:30%;"> <strong>ID: </strong></td>
-                <td style="width:70%;"> {{this_contest.id}} </td>
-            </tr>
-            <tr>
-                <td style="width:30%;"> <strong>Title: </strong></td>
-                <td style="width:70%;"> {{this_contest.title}} </td>
-            </tr>
-            <tr>
-                <td style="width:30%;"> <strong>Active Time: </strong></td>
-                <td style="width:70%;"> {{this_contest.active_time}} </td>
-            </tr>
-            <tr>
-                <td style="width:30%;"> <strong>Start Time: </strong></td>
-                <td style="width:70%;"> {{this_contest.start_time}} </td>
-            </tr>
-            <tr>
-                <td style="width:30%;"> <strong>End Time: </strong></td>
-                <td style="width:70%;"> {{this_contest.end_time}} </td>
-            </tr>
-            {% if this_contest.frozen_time %}
-            <tr>
-                <td style="width:30%;"> <strong>Frozen Time: </strong></td>
-                <td style="width:70%;"> {{this_contest.frozen_time}} </td>
-            </tr>
-            {% endif %}
-            {% if this_contest.unfrozen_time %}
-            <tr>
-                <td style="width:30%;"> <strong>Unfrozen Time: </strong></td>
-                <td style="width:70%;"> {{this_contest.unfrozen_time}} </td>
-            </tr>
-            {% endif %}
-            <tr>
-                <td style="width:30%;"> <strong>Deactivate Time: </strong></td>
-                <td style="width:70%;"> {{this_contest.deactivate_time}} </td>
-            </tr>
-            <tr>
-                <td style="width:30%;"> <strong>Is Public: </strong></td>
-                <td style="width:70%;"> {{this_contest.is_public}} </td>
-            </tr>
-            <tr>
-                <td style="width:30%;"> <strong>Has Value: </strong></td>
-                <td style="width:70%;"> {{this_contest.has_value}} </td>
-            </tr>
-            <tr>
-                <td style="width:30%;"> <strong>Enable: </strong></td>
-                <td style="width:70%;"> {{this_contest.enable}} </td>
-            </tr>
-
-            {% if this_contest.problem.all %}
-            <tr>
-                <td style="width:30%;"> <strong>Problems:</strong></td>
-                <td style="width:70%;">
-                    <table  style="width:100%;">
-                        {% for i in this_contest.problem.all %}
-                            <tr><td>{{i.title}} </td></tr>
-                        {% endfor %}
-                    </table>
-                </td>
-            </tr>
-            {% endif %}
-        
-            {% if this_contest.user.all %}
-            <tr>
-                <td style="width:30%;"> <strong>Users:</strong></td>
-                <td style="width:70%;">
-                    <table  style="width:100%;">
-                        <tr>
-                            <th><strong>Username</strong></th>
-                            <th><strong>Name</strong></th>
-                        </tr>
-                        {% for i in this_contest.user.all %}
-                            <tr>
-                                <td>{{i.username}} </td>
-                                <td>{{i.name}} </td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </td>
-            </tr>
-            {% endif %}
-        </table>
+<div class="card" style="margin-left: 10em;  margin-right: 40em; margin-top: 2em;">
+    <div class="card-header" style="font-size: 18px;"> 
+        <strong>CONTEST: {{contest.title}} </strong> 
+   
     </div>
+    <table class="table table-light"> 
+        <tr>
+            <td> <strong>ID: </strong></td>
+            <td> {{contest.id}} </td>
+        </tr>
+        <tr>
+            <td> <strong>Title: </strong></td>
+            <td> {{contest.title}} </td>
+        </tr>
+        <tr>
+            <td> <strong>Active Time: </strong></td>
+            <td> {{contest.active_time}} </td>
+        </tr>
+        <tr>
+            <td> <strong>Start Time: </strong></td>
+            <td> {{contest.start_time}} </td>
+        </tr>
+        <tr>
+            <td> <strong>End Time: </strong></td>
+            <td> {{contest.end_time}} </td>
+        </tr>
+        {% if contest.frozen_time %}
+        <tr>
+            <td> <strong>Frozen Time: </strong></td>
+            <td> {{contest.frozen_time}} </td>
+        </tr>
+        {% endif %}
+        {% if contest.unfrozen_time %}
+        <tr>
+            <td> <strong>Unfrozen Time: </strong></td>
+            <td> {{contest.unfrozen_time}} </td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td> <strong>Deactivate Time: </strong></td>
+            <td> {{contest.deactivate_time}} </td>
+        </tr>
+        <tr>
+            <td> <strong>Is Public: </strong></td>
+            <td> {{contest.is_public}} </td>
+        </tr>
+        <tr>
+            <td> <strong>Has Value: </strong></td>
+            <td> {{contest.has_value}} </td>
+        </tr>
+        <tr>
+            <td> <strong>Enable: </strong></td>
+            <td> {{contest.enable}} </td>
+        </tr>
+    </table>
 </div>
+
+    {% if problem %}
+    <div class="card" style="margin-left: 10em;  margin-right: 40em; margin-top:2em;">
+        <div class="card-header" style="font-size: 18px;"> 
+            <strong>PROBLEM LIST FOR CONTEST {{contest.title}}</strong> 
+    
+        </div>
+    
+        <table >
+            <thead class="table-info">
+                <tr>
+                    <th ><strong>No.</strong></th>
+                    <th ><strong>Title of problem</strong></th>
+                    <th ><strong>Short name</strong></th>
+                </tr>
+            </thead>
+            {% for i in problem %}
+                <tr>
+                    <td >{{forloop.counter}}</td>
+                    <td >{{i.title}}</td>
+                    <td >{{i.short_name}}</td>
+                    
+                </tr>
+            {% endfor %}
+        </table>
+        
+        <!-- pagination -->
+        {% if problem.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace2 %}
+            <ul class="pagination">
+                {% if problem.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'type' 'problem' %}">⇤</a></li>
+                {% endif %}
+                {% if problem.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' problem.previous_page_number 'type' 'problem'%}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in problem_paginator|proper_paginate:problem.number%}
+                    {% if problem.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' i 'type' 'problem' %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if problem.has_next %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' problem.next_page_number 'type' 'problem' %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if problem.number == problem_paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' problem_paginator.num_pages 'type' 'problem' %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->
+    </div>
+    {% endif %}
+    
+
+    {% if user %}
+    <div class="card" style="margin-left: 10em;  margin-right: 40em;  margin-top:2em; margin-bottom:2em;">
+        <div class="card-header" style="font-size: 18px;"> 
+            <strong>USER LIST FOR CONTEST {{contest.title}}</strong> 
+    
+        </div>
+    
+        <table >
+            <thead class="table-info">
+                <tr>
+                    <th ><strong>No.</strong></th>
+                    <th ><strong>Username</strong></th>
+                    <th ><strong>Name</strong></th>
+                </tr>
+            </thead>
+            {% for i in user %}
+                <tr>
+                    <td >{{forloop.counter}}</td>
+                    <td >{{i.username}}</td>
+                    <td >{{i.name}}</td>
+                    
+                </tr>
+            {% endfor %}
+        </table>
+
+        <!-- pagination -->
+        {% if user.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace2 %}
+            <ul class="pagination">
+                {% if user.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'type' 'user' %}">⇤</a></li>
+                {% endif %}
+                {% if user.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' user.previous_page_number 'type' 'user'%}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in user_paginator|proper_paginate:user.number%}
+                    {% if user.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' i 'type' 'user' %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if user.has_next %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' user.next_page_number 'type' 'user' %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if user.number == user_paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace2 request 'page' user_paginator.num_pages 'type' 'user' %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->
+    </div>
+    {% endif %}
+
 {% endblock %}
 
    

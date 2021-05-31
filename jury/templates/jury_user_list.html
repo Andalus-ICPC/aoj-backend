@@ -5,83 +5,423 @@
 {% block content %}
 {% load static %}
 {% load widget_tweaks %}
-{% if contestant_user%}
-<div class="col-sm-8 col-centered" style="margin-top: 2em;">
-    <h5 class="ur-card-title" style="font-size: 2em;">contestant user list</h5>
-    <table class="table table-striped">
-        <thead class="table-info">
-            <tr>
-                <th ><strong>id</strong></th>
-                <th ><strong>username</strong></th>
-                <th ><strong>name</strong></th>
-                <th ><strong>e-mail</strong></th>
-                <th ><strong>campus</strong></th>
-            </tr>
-        </thead>
-        {% for i in contestant_user %}
-            <tr>
-                <td >{{i.id}}</td>
-                <td >{{i.username}}</td>
-                <td >{{i.name}}</td>
-                <td >{{i.email}}</td>
-                <td >{{i.campus}}</td>
-            </tr>
-        {% endfor %}
-    </table>        
-</div>
-{% endif %}
+<style>
+    .pagination {
+        display: inline-block;
+    }
 
-{% if admin_user%}
-<div class="col-sm-8 col-centered" style="margin-top: 5em;">
-    <h5 class="ur-card-title" style="font-size: 2em;">admin user list</h5>
-    <table class="table table-striped">
-        <thead class="table-info">
-            <tr>
-                <th ><strong>id</strong></th>
-                <th ><strong>username</strong></th>
-                <th ><strong>name</strong></th>
-                <th ><strong>e-mail</strong></th>
-                <th ><strong>campus</strong></th>
-            </tr>
-        </thead>
-        {% for i in admin_user %}
-            <tr>
-                <td >{{i.id}}</td>
-                <td >{{i.username}}</td>
-                <td >{{i.name}}</td>
-                <td >{{i.email}}</td>
-                <td >{{i.campus}}</td>
-            </tr>
-        {% endfor %}
-    </table>        
-</div>
-{% endif %}
+    .pagination a {
+        color: black;
+        float: left;
+        padding: 8px 16px;
+        text-decoration: none;
+    }
+    .pagination a.active {
+    background-color: #4CAF50;
+    color: white;
+    }
 
-{% if jury_user%}
-<div class="col-sm-8 col-centered" style="margin-top: 5em;">
-    <h5 class="ur-card-title" style="font-size: 2em;">jury user list</h5>
-    <table class="table table-striped">
-        <thead class="table-info">
-            <tr>
-                <th ><strong>id</strong></th>
-                <th ><strong>username</strong></th>
-                <th ><strong>name</strong></th>
-                <th ><strong>e-mail</strong></th>
-                <th ><strong>campus</strong></th>
-            </tr>
-        </thead>
-        {% for i in jury_user %}
-            <tr>
-                <td >{{i.id}}</td>
-                <td >{{i.username}}</td>
-                <td >{{i.name}}</td>
-                <td >{{i.email}}</td>
-                <td >{{i.campus}}</td>
-            </tr>
-        {% endfor %}
-    </table>        
+    .pagination a:hover:not(.active) {background-color: #ddd;}
+    .pagination a:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+    }
+
+    .pagination a:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+    .center {
+        text-align: center;
+    }
+</style>
+<link rel="stylesheet" href="{% static 'files/ranklist.css' %}" type="text/css">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://www.solodev.com/assets/pagination/jquery.twbsPagination.js"></script>
+<!-- <script src="paging.js"></script> -->
+<div class="card" style="margin-left: 5%;  margin-right: 5%;" >
+    <div class="card-header titles" style="font-size: 18px;" > 
+
+        <div class="title">contestant user</div>
+        <div class="title">public user</div>
+        <div class="title">jury user</div>
+        <div class="title">admin user</div>
+        <div class="title">site admin user</div>
+    </div>
+
+    <div class="content">
+        <div class="item">
+            <div class="card">
+                <table>
+                    <tr>
+                        <td> <strong>No. </strong></td>
+                        <td> <strong>User Name </strong></td>
+                        <td> <strong>Full Name </strong></td>
+                        <td> <strong>E-Mail </strong></td>
+                        <td> <strong>Campus </strong></td>
+                        <td> <strong>Rating </strong></td>
+                    </tr>
+                    <tr>
+                    {% for i in contestant_user %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{i.username}}</td>
+                            <td>{{i.name}}</td>
+                            <td>{{i.email}}</td>
+                            <td>{{i.campus}}</td>
+                            <td>{{i.rating}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tr>
+                </table>
+                <!-- pagination -->
+                {% if contestant_user.has_other_pages %}
+                {% load proper_paginate %}
+                {% load url_replace2 %}
+                <ul class="pagination">
+                    {% if contestant_user.number == 1 %}
+                        <li class="disabled"><span>⇤</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page'  'role' 1 'contestant' %}">⇤</a></li>
+                    {% endif %}
+                    {% if contestant_user.has_previous %}
+                        
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' contestant_user.previous_page_number 'role' 'contestant' %}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in contestant_paginator|proper_paginate:contestant_user.number%}
+                        {% if contestant_user.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a class="page-link" href="?{% url_replace2 request 'page' i 'role' 'contestant' %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if contestant_user.has_next %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' contestant_user.next_page_number 'role' 'contestant' %}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                    {% if contestant_user.number == contestant_paginator.num_pages %}
+                        <li class="disabled"><span>⇥</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' contestant_paginator.num_pages 'role' 'contestant' %}">⇥</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- end pagination -->
+            </div>
+        </div>
+
+        <div class="item">
+            <div class="card">
+                <table>
+                    <tr>
+                        <td> <strong>No. </strong></td>
+                        <td> <strong>User Name </strong></td>
+                        <td> <strong>Full Name </strong></td>
+                        <td> <strong>E-Mail </strong></td>
+                        <td> <strong>Campus </strong></td>
+                        <td> <strong>Rating </strong></td>
+                    </tr>
+                    <tr>
+                    {% for i in public_user %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td> {{i.username}}</td>
+                            <td>{{i.name}}</td>
+                            <td>{{i.email}}</td>
+                            <td>{{i.campus}}</td>
+                            <td>{{i.rating}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tr>
+                </table>
+                <!-- pagination -->
+                {% if public_user.has_other_pages %}
+                {% load proper_paginate %}
+                {% load url_replace2 %}
+                <ul class="pagination">
+                    {% if public_user.number == 1 %}
+                        <li class="disabled"><span>⇤</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'role' 'public'%}">⇤</a></li>
+                    {% endif %}
+                    {% if public_user.has_previous %}
+                        
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' public_user.previous_page_number 'role' 'public'%}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in public_paginator|proper_paginate:public_user.number%}
+                        {% if public_user.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a class="page-link" href="?{% url_replace2 request 'page' i 'role' 'public'%}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if public_user.has_next %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' public_user.next_page_number 'role' 'public'%}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                    {% if public_user.number == public_paginator.num_pages %}
+                        <li class="disabled"><span>⇥</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' public_paginator.num_pages 'role' 'public' %}">⇥</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- end pagination -->
+            </div>
+        </div>
+
+
+        <div class="item">
+            <div class="card">
+                <table>
+                    <tr>
+                        <td> <strong>No. </strong></td>
+                        <td> <strong>User Name </strong></td>
+                        <td> <strong>Full Name </strong></td>
+                        <td> <strong>E-Mail </strong></td>
+                        <td> <strong>Campus </strong></td>
+                        <td> <strong>Rating </strong></td>
+                    </tr>
+                    <tr>
+                    {% for i in jury_user %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td> {{i.username}}</td>
+                            <td>{{i.name}}</td>
+                            <td>{{i.email}}</td>
+                            <td>{{i.campus}}</td>
+                            <td>{{i.rating}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tr>
+                </table>
+                <!-- pagination -->
+                {% if jury_user.has_other_pages %}
+                {% load proper_paginate %}
+                {% load url_replace2 %}
+                <ul class="pagination">
+                    {% if jury_user.number == 1 %}
+                        <li class="disabled"><span>⇤</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'role' 'jury' %}">⇤</a></li>
+                    {% endif %}
+                    {% if jury_user.has_previous %}
+                        
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' jury_user.previous_page_number 'role' 'jury' %}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in jury_paginator|proper_paginate:jury_user.number%}
+                        {% if jury_user.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a class="page-link" href="?{% url_replace2 request 'page' i 'role' 'jury' %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if jury_user.has_next %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' jury_user.next_page_number 'role' 'jury' %}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                    {% if jury_user.number == jury_paginator.num_pages %}
+                        <li class="disabled"><span>⇥</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' jury_paginator.num_pages 'role' 'jury' %}">⇥</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- end pagination -->
+            </div>
+        </div>
+
+        
+        <div class="item">
+            <div class="card">
+                <table>
+                    <tr>
+                        <td> <strong>No. </strong></td>
+                        <td> <strong>User Name </strong></td>
+                        <td> <strong>Full Name </strong></td>
+                        <td> <strong>E-Mail </strong></td>
+                        <td> <strong>Campus </strong></td>
+                        <td> <strong>Rating </strong></td>
+                    </tr>
+                    <tr>
+                    {% for i in admin_user %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td> {{i.username}}</td>
+                            <td>{{i.name}}</td>
+                            <td>{{i.email}}</td>
+                            <td>{{i.campus}}</td>
+                            <td>{{i.rating}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tr>
+                </table>
+                <!-- pagination -->
+                {% if admin_user.has_other_pages %}
+                {% load proper_paginate %}
+                {% load url_replace2 %}
+                <ul class="pagination">
+                    {% if admin_user.number == 1 %}
+                        <li class="disabled"><span>⇤</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'role' 'admin'  %}">⇤</a></li>
+                    {% endif %}
+                    {% if admin_user.has_previous %}
+                        
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' admin_user.previous_page_number 'role' 'admin'  %}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in admin_paginator|proper_paginate:admin_user.number%}
+                        {% if admin_user.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a class="page-link" href="?{% url_replace2 request 'page' i 'role' 'admin'  %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if admin_user.has_next %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' admin_user.next_page_number 'role' 'admin'  %}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                    {% if admin_user.number == admin_paginator.num_pages %}
+                        <li class="disabled"><span>⇥</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' admin_paginator.num_pages 'role' 'admin' %}">⇥</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- end pagination -->
+            </div>
+        </div>
+
+        
+        <div class="item">
+            <div class="card">
+                <table>
+                    <tr>
+                        <td> <strong>No. </strong></td>
+                        <td> <strong>User Name </strong></td>
+                        <td> <strong>Full Name </strong></td>
+                        <td> <strong>E-Mail </strong></td>
+                        <td> <strong>Campus </strong></td>
+                        <td> <strong>Rating </strong></td>
+                    </tr>
+                    <tr>
+                    {% for i in site_admin_user %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td> {{i.username}}</td>
+                            <td>{{i.name}}</td>
+                            <td>{{i.email}}</td>
+                            <td>{{i.campus}}</td>
+                            <td>{{i.rating}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tr>
+                </table>
+                <!-- pagination -->
+                {% if site_admin_user.has_other_pages %}
+                {% load proper_paginate %}
+                {% load url_replace2 %}
+                <ul class="pagination">
+                    {% if site_admin_user.number == 1 %}
+                        <li class="disabled"><span>⇤</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' 1 'role' 'site_admin' %}">⇤</a></li>
+                    {% endif %}
+                    {% if site_admin_user.has_previous %}
+                        
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' site_admin_user.previous_page_number 'role' 'site_admin'%}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in site_admin_paginator|proper_paginate:site_admin_user.number%}
+                        {% if site_admin_user.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a class="page-link" href="?{% url_replace2 request 'page' i 'role' 'site_admin' %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if site_admin_user.has_next %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' site_admin_user.next_page_number 'role' 'site_admin' %}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                    {% if site_admin_user.number == site_admin_paginator.num_pages %}
+                        <li class="disabled"><span>⇥</span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace2 request 'page' site_admin_paginator.num_pages 'role' 'site_admin' %}">⇥</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- end pagination -->
+            </div>
+        </div>
+    </div>
 </div>
-{% endif %}
+
+
+<script>
+
+    function openUserList(evt, type) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        document.getElementById(type).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+
+    var titles = document.querySelectorAll('.title');
+    var items = document.querySelectorAll('.item');
+
+    var role_list = {"contestant": 0, "public": 1, "jury": 2, "admin": 3, "site_admin": 4};
+    var role = '{{role}}';
+    var selected_role = role_list[role];
+    items[selected_role].style.display = 'block';
+    titles[selected_role].setAttribute('data-status', 'active');
+    
+    for(let i=0; i<titles.length; i++) {
+        let status = true;
+
+        
+        titles[i].addEventListener('click', function(event) {
+            if(status) {
+                items[i].style.display = 'block';
+                titles[i].setAttribute('data-status', 'active');
+                
+                for(let j=0; j<titles.length; j++) {
+                    if(titles[j] != event.target) {
+                        items[j].style.display = 'none';
+                        titles[j].removeAttribute('data-status');
+                    }
+                }
+
+                status = true;
+            }
+        });
+    }
+</script>
 {% endblock %}
 
    
+

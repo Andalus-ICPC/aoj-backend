@@ -13,5 +13,8 @@ from authentication.models import User
 class AddJudgeserver(forms.ModelForm):
    class Meta:
       model = JudgeServer
-      fields = ['address', 'is_enabled']
+      fields = ['address', 'is_enabled', 'problem']
 
+      widgets = {
+            'problem': FilteredSelectMultiple(('tags'), is_stacked=True,)
+      }

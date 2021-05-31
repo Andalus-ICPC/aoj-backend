@@ -7,7 +7,7 @@ from authentication.decorators import contestant_auth, admin_auth, jury_auth,\
     admin_auth_and_clarification_exist, site_auth, site_auth_and_clarification_exist
 from django.utils import timezone
 from contest.views import refresh_contest_session_public, refresh_contest_session_admin, refresh_contest_session_contestant
-# Create your views here.
+from authentication.pagination import pagination, page_number_pagination
 
 
 @login_required
@@ -44,10 +44,14 @@ def request_clarification(request):
         contest=current_contest, user=request.user).order_by('send_time').reverse()
     for cla in all_clarification:
         if len(cla.question) > 100:
-            cla.short_question = cla.question[:100] + '...'
+            cla.short_question = cla.question[:100] + ' ...'
         else:
             cla.short_question = cla.question
-    return render(request, 'clarification_request.html', {'form': form, 'all_clarification': all_clarification, 'clar': 'hover'})
+    all_clarification, paginator = pagination(request, all_clarification)
+    context = {'form': form, 'all_clarification': all_clarification,
+                'paginator': paginator, 'clar': 'hover'
+            }
+    return render(request, 'clarification_request.html', context)
 
 
 @login_required
@@ -67,16 +71,19 @@ def view_clarification(request):
 
     for cla in all_clarification:
         if len(cla.question) > 60:
-            cla.short_question = cla.question[:60] + '...'
+            cla.short_question = cla.question[:60] + ' ...'
         else:
             cla.short_question = cla.question
 
         if len(cla.answer) > 60:
-            cla.short_answer = cla.answer[:60] + '...'
+            cla.short_answer = cla.answer[:60] + ' ...'
         else:
             cla.short_answer = cla.answer
-
-    return render(request, 'view_clarification.html', {'all_clarification': all_clarification, 'clarif': 'hover'})
+    all_clarification, paginator = pagination(request, all_clarification)
+    context = {'all_clarification': all_clarification,
+                'paginator': paginator, 'clar': 'hover'
+            }
+    return render(request, 'view_clarification.html', context)
 
 
 @login_required
@@ -97,12 +104,18 @@ def clarification_list(request):
             cla.short_question = cla.question[:100] + '...'
         else:
             cla.short_question = cla.question
-    return render(request, 'clarification_list.html', {'all_clarification': all_clarification, 'clar': 'hover'})
+
+    all_clarification, paginator = pagination(request, all_clarification)
+    page_number = all_clarification.number
+    context = {'all_clarification': all_clarification, 'page_number': page_number,
+                'paginator': paginator, 'clar': 'hover'
+            }
+    return render(request, 'clarification_list.html', context)
 
 
 @login_required
 @admin_auth_and_clarification_exist
-def clarification_answer(request, clarification_id):
+def clarification_answer(request, clarification_id, page_number):
 
     clarification = Clarification.objects.get(pk=clarification_id)
     all_clarification = Clarification.objects.filter(
@@ -131,8 +144,14 @@ def clarification_answer(request, clarification_id):
     else:
         form = ClarificationAnswer(
             instance=clarification, initial=initial_info)
-
-    return render(request, 'clarification_answer.html', {'form': form, 'all_clarification': all_clarification, 'this_clarification_id': clarification.id, 'clar': 'hover'})
+    
+    page_number = request.GET.get('page', page_number)
+    all_clarification, paginator = page_number_pagination(request, all_clarification, page_number)
+    context = {'form': form, 'all_clarification': all_clarification,
+                'paginator': paginator, 'this_clarification_id': clarification.id,
+                'page_number': page_number, 'clar': 'hover'
+            }
+    return render(request, 'clarification_answer.html', context)
 
 
 @login_required
@@ -194,7 +213,11 @@ def answered_clarification(request):
             cla.short_answer = cla.answer[:60] + '...'
         else:
             cla.short_answer = cla.answer
-    return render(request, 'answered_clarification_list.html', {'all_clarification': all_clarification, 'clar': 'hover'})
+    all_clarification, paginator = pagination(request, all_clarification)
+    context = {'all_clarification': all_clarification,
+                'paginator': paginator, 'clar': 'hover'
+            }
+    return render(request, 'answered_clarification_list.html', context)
 
 
 @login_required
@@ -253,8 +276,11 @@ def view_jury_clarification(request):
             cla.short_answer = cla.answer[:60] + '...'
         else:
             cla.short_answer = cla.answer
-
-    return render(request, 'view_jury_clarification.html', {'all_clarification': all_clarification, 'clar': 'hover'})
+    all_clarification, paginator = pagination(request, all_clarification)
+    context = {'all_clarification': all_clarification,
+                'paginator': paginator, 'clar': 'hover'
+            }
+    return render(request, 'view_jury_clarification.html', context)
 
 
 
@@ -277,12 +303,17 @@ def site_clarification_list(request):
             cla.short_question = cla.question[:100] + '...'
         else:
             cla.short_question = cla.question
-    return render(request, 'site_clarification_list.html', {'all_clarification': all_clarification, 'clar': 'hover'})
+    all_clarification, paginator = pagination(request, all_clarification)
+    page_number = all_clarification.number
+    context = {'all_clarification': all_clarification, 'page_number': page_number,
+                'paginator': paginator, 'clar': 'hover'
+            }
+    return render(request, 'site_clarification_list.html', context)
 
 
 @login_required
 @site_auth_and_clarification_exist
-def site_clarification_answer(request, clarification_id):
+def site_clarification_answer(request, clarification_id, page_number):
 
     clarification = Clarification.objects.get(pk=clarification_id)
     all_clarification = Clarification.objects.filter(
@@ -311,8 +342,14 @@ def site_clarification_answer(request, clarification_id):
     else:
         form = ClarificationAnswer(
             instance=clarification, initial=initial_info)
+    page_number = request.GET.get('page', page_number)
+    all_clarification, paginator = page_number_pagination(request, all_clarification, page_number)
+    
+    context = {'form': form, 'all_clarification': all_clarification, 'page_number': page_number,
+                'paginator': paginator, 'this_clarification_id': clarification.id, 'clar': 'hover'
+            }
 
-    return render(request, 'site_clarification_answer.html', {'form': form, 'all_clarification': all_clarification, 'this_clarification_id': clarification.id, 'clar': 'hover'})
+    return render(request, 'site_clarification_answer.html', context)
 
 
 @login_required

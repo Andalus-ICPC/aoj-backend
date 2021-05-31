@@ -8,15 +8,15 @@
             <table class="table table-light" style="margin-top: 4em;">
                 <tr>
                     <td ><strong>user: </strong></td>
-                    <td >{{submit.0.user}}</td>
+                    <td >{{this_submit.0.user}}</td>
                 </tr>
                 <tr>
                     <td ><strong>contest: </strong></td>
-                    <td >{{submit.0.contest}}</td>
+                    <td >{{this_submit.0.contest}}</td>
                 </tr>
                 <tr>
                     <td ><strong>problem: </strong></td>
-                    <td >{{submit.0.problem}}</td>
+                    <td >{{this_submit.0.problem}}</td>
                 </tr>
             </table>
         </div>
@@ -33,7 +33,7 @@
                 <th ><strong>Detail</strong></th>
             </tr>
             </thead>
-            {% for i in submit %}
+            {% for i in this_submit %}
                 <tr class="submit" id="{{i.id}}">
                     <td >{{i.id}}</td>
                     <td >{{i.contest_time}}</td>
@@ -41,6 +41,8 @@
                     <td >{{i.language}}</td>
                     {%if i.result == 'Correct'%}
                         <td style="color:green;" class="result" id="result-{{i.id}}">{{i.result}}</td>
+                    {%elif i.result == "Judging"%}
+                        <td style="color:rgb(161, 16, 161);" id="result-{{i.id}}">{{i.result}}</td>    
                     {%else%}
                         <td style="color:red;" class="result" id="result-{{i.id}}">{{i.result}}</td>
                     {%endif%}
@@ -51,7 +53,43 @@
                 </tr>
             {% endfor %}
             </table>
-        
+                    
+            <!-- pagination -->
+            {% if this_submit.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if this_submit.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if this_submit.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' this_submit.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:this_submit.number%}
+                    {% if this_submit.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if this_submit.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' this_submit.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if this_submit.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+        <!-- end pagination -->
         </div>
     </div>
     <script>
@@ -62,7 +100,7 @@
             all_results = document.getElementsByClassName("result");
             for (i=0; i<all_results.length; i++){
                 all_results[i].style.color = "gray";
-                all_results[i].innerText = "pending ...";
+                all_results[i].innerText = "pending ..";
             }
             
             for (i=0; i<all_rows.length; i++){
@@ -97,6 +135,8 @@
                         if (result == "Correct"){
                             this_row_result.style.color = "green";
                         }
+                        else if(result == "Judging")
+                            this_row_result.style.color = "#a110a1";
                         else{
                             this_row_result.style.color = "red";
                         }

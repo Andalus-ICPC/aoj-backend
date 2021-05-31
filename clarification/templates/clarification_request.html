@@ -82,9 +82,7 @@
         width: 400px;
         font-size: 20px;
     }
-    .id_question{
-        rows: 10;
-    }
+
 </style>
 <script src="{% static 'ace-builds/src/ace.js' %}" type="text/javascript" charset="utf-8"> </script>
 <script src="{% static 'ace-builds/src/theme-twilight.js' %}" type="text/javascript" charset="utf-8"> </script>
@@ -101,10 +99,10 @@
     </div>
 {% else %}
 <div class="col-sm-8 col-centered" style="margin-top: 2em;">
-    <h5 class="ur-card-title" style="font-size: 2em;">clarification request list 
-     <ul class="object-tools" style="position: absolute;top: 50px; right: 0px;">
-       <li> <a data-js="open"  class = "btn btn-success addlink">request clarification</a></li>
-   </ul>
+    <h5 class="ur-card-title" style="font-size: 2em;">clarification request list  
+     <!-- <ul class="object-tools" style="position: absolute;top: 50px; right: 0px;"> -->
+      <a class = "btn btn-outline-primary" data-js="open" style="float:right;">request clarification</a>
+   <!-- </ul> -->
     <!-- <button class = "btn btn-primary" data-js="open" style="float:right;">request clarification</button> -->
     </h5>
     <div class="popup">
@@ -170,7 +168,48 @@
                 </div>           
             {%endfor%}
         </table>
+
+        <!-- pagination -->
+        {% if all_clarification.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if all_clarification.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if all_clarification.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_clarification.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:all_clarification.number%}
+                    {% if all_clarification.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if all_clarification.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_clarification.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if all_clarification.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
         {% endif %}
+        <!-- end pagination -->  
+        {% else %}
+        <div class="container nocontest">
+            <h5 class="ur-card-title" style="font-size: 1em;">There is no new clarification request for this contest</h5>
+        </div>
+        {% endif %}    
     </div>
 
 </div>

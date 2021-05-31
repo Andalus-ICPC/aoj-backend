@@ -10,19 +10,25 @@ from authentication.validators import validate_testcase_in_file_extension, valid
     validate_problem_file_extension
 from django.core.exceptions  import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
-import  os, sys
+import  os, sys, requests, shutil
 from zipfile import ZipFile, BadZipFile
 from io import BytesIO
 from django.db import IntegrityError
 from contest.models import Contest
 from public.models import Statistics
 from competitive.models import Submit
+from judgeserver.models import JudgeServer
+from judgeserver.views import testcase_transfer_to_server
+from authentication.pagination import pagination
+
 
 @login_required
 @admin_auth
 def problem_list(request):
     total_problems = Problem.objects.all().order_by('pk').reverse()
-    return render(request, 'all_problems.html', {'problem': total_problems, 'pro': 'hover'})
+    total_problems, paginator = pagination(request, total_problems)
+
+    return render(request, 'all_problems.html', {'problem': total_problems, 'paginator': paginator, 'pro': 'hover'})
 
 def addProblem(request):
     if request.method =="POST":
@@ -36,7 +42,7 @@ def addProblem(request):
 
             # if post.is_public:
             create_statistics(post) # create statistics for this problem
-
+            server_testcase_add(post)
             messages.success(request, "problem "+post.title+" was added successfully.")
             return redirect('testcase', post.pk)
     else:
@@ -60,6 +66,39 @@ def addProblemZIP(request):
     return render(request, 'add_problem.html', {'form': form, 'form1': form1, 'pro': 'hover'})
 
 
+def server_testcase_add(problem):
+    active_server = {i for i in JudgeServer.objects.filter(status="Normal", is_enabled=True)}
+
+    for server in active_server:
+        try:
+            testcase_transfer_to_server(server, problem)
+            server.problem.add(problem)
+            server.save()
+        except:
+            pass
+
+
+def server_testcase_edit(problem):
+    server_list = {i for i in JudgeServer.objects.all()}
+    active_server = {i for i in JudgeServer.objects.filter(status="Normal", is_enabled=True)}
+    down_server = server_list.difference(active_server)
+
+    for server in active_server:
+        if not problem in server.problem.all():
+            continue
+        try:
+            requests.post(server.address + "/remove_testcase",  data={'testcase_id': str(problem.id)})
+            testcase_transfer_to_server(server, problem)
+        except:
+            down_server.add(server)
+    
+    for server in down_server:
+        if not problem in server.problem.all():
+            continue
+        server.problem.remove(problem)
+        server.save()
+    
+    
 @login_required
 @admin_auth_and_problem_exist
 def edit_problem(request, problem_id):
@@ -83,6 +122,7 @@ def edit_problem(request, problem_id):
             #         stat.save()
             #     except Statistics.DoesNotExist:
             #         pass
+            
             messages.success(request, "The problem "+problem.title+" was update successfully.") 
             return redirect('testcase', problem_id)    
                 
@@ -105,28 +145,46 @@ def delete_problem(request, problem_id):
 @admin_auth_and_problem_exist
 def delete_problem_done(request, problem_id):
     problem = Problem.objects.get(pk=problem_id)
-    test_case = TestCase.objects.filter(problem=problem)
-    for i in test_case:
-        os.system('rm '+i.input.path) 
-        os.system('rm '+i.output.path) 
-    os.system('rm -R '+problem.pdf.path) 
-
+    # test_case = TestCase.objects.filter(problem=problem)
+    # for i in test_case:
+    #     os.system('rm '+i.input.path) 
+    #     os.system('rm '+i.output.path) 
+    #os.system('rm -R '+problem.pdf.path) 
+    file_path = os.path.split(problem.pdf.path)[0]
+    if os.path.exists(file_path):
+        shutil.rmtree(file_path)
     problem_include_contest = Contest.objects.filter(problem=problem)
     for contest in problem_include_contest:
         contest.last_update = timezone.now()
         contest.save()
     problem.delete()
 
+    server_list = JudgeServer.objects.filter(status="Normal", is_enabled=True)
+    for server in server_list:
+        try:
+            requests.post(server.address + "/remove_testcase",  data={'testcase_id': str(problem.id)})
+        except:
+            pass
+
     messages.success(request, "The problem " + problem.title + " was deleted successfully.")
     return redirect('problem_list')
 
-
+def lambda_sort(x):
+    if x.name[1:].isdigit():
+        return int(x.name[1:])
+    else:
+        return x.name[1:].lower()
 
 @login_required   
 @admin_auth_and_problem_exist
 def testcase(request, problem_id):
     problem = Problem.objects.get(pk=problem_id)
-    test_case = TestCase.objects.filter(problem=problem).order_by('name')
+    test_case = TestCase.objects.filter(problem=problem)
+    test_case = sorted(test_case, key=lambda x: lambda_sort(x))
+    if test_case[-1].name[1:].isdigit():
+        name = 't'+str(int(test_case[-1].name[1:]) + 1)
+    else:
+        name = test_case[-1].name + '1'
     if request.method == "POST":
         error_list = []
         for i in test_case:
@@ -153,7 +211,6 @@ def testcase(request, problem_id):
         if form.is_valid():
             post = form.save(commit=False)
 
-            name = 't'+str(len(test_case)+1)
             post.problem = problem
             post.name = name
             post.save()
@@ -162,10 +219,13 @@ def testcase(request, problem_id):
         if error_list:
             messages.warning(request, "Unsupported file extension in "+ ', '.join(error_list))
         url = request.META['HTTP_REFERER']
+        server_testcase_edit(problem)
         return redirect('testcase', problem_id)
     else:
         form = AddTestcase()
-    return render(request, 'testcase.html', {'form': form, 'title': problem.title, 'test_case': test_case, "problem_id": problem.id, 'pro': 'hover'})
+    
+    test_case, paginator = pagination(request, test_case, 10)
+    return render(request, 'testcase.html', {'form': form, 'title': problem.title, 'test_case': test_case, 'paginator': paginator, "problem_id": problem.id, 'pro': 'hover'})
 
 
 @login_required
@@ -182,7 +242,9 @@ def delete_testcase_done(request, testcase_id):
     os.system('rm '+test_case.input.path)
     os.system('rm '+test_case.output.path)
     test_case.delete()
+    server_testcase_edit(test_case.problem)
     messages.success(request, "Testcase " + test_case.name + " was deleted successfully.")
+
     return redirect('testcase', test_case.problem.pk)
     
 
@@ -305,6 +367,8 @@ def handle_zip_file(request, problem_zip):
 
                 # if problem.is_public:
                 create_statistics(problem) # create statistics for this problem
+    
+                server_testcase_add(problem)
 
                 messages.success(request, "problem "+problem.title+" was added successfully.")
                 sample_test_case(request, zip, problem)   

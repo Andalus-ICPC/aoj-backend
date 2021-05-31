@@ -6,6 +6,7 @@ from time import time
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from django.utils import timezone
+from judgeserver.models import JudgeServer
 # Create your models here.
 
 result_lists=(('Correct', 'Correct'), ('Time Limit Exceeded', 'Time Limit Exceeded'), ('Wrong Answer', 'Wrong Answer'), 
@@ -13,18 +14,12 @@ result_lists=(('Correct', 'Correct'), ('Time Limit Exceeded', 'Time Limit Exceed
     ('Run Time Error', 'Run Time Error'), ('No Output', 'No Output')
 )
 
-def testcase_output_directory_upload(instance, filename):
-    problem_title = instance.submit.problem.title.replace(' ', '')
-    testcase_title = instance.test_case.name.replace(' ', '')
-    # filename = filename.replace(' ','')
-    return 'file/user_{0}/{1}/{2}/output_{3}.out'.format(instance.submit.user.id, problem_title, instance.submit.id, testcase_title)
-
+submit_result_list = result_lists + (("Judging", 'Judging'),)
 
 def submit_file_directory_upload(instance, filename):
     problem_title = instance.problem.title.replace(' ', '')
     filename = filename.replace(' ','')
     return 'file/user_{0}/{1}/{2}/{3}'.format(instance.user.id, problem_title, instance.id, filename)
-    # return 'file/user_{0}/{1}/{2}/{3}'.format(instance.user.id, problem_title, time() , filename)
 
 
 class Language(models.Model):
@@ -33,7 +28,7 @@ class Language(models.Model):
     run_command = models.CharField(max_length=300, help_text='use @ to represent file_name with extension and # with out extension')
     extension = models.CharField(max_length=200, blank=True)
     editor_mode = models.CharField(max_length=200, blank=True)
-    # enable = 
+    enable = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -42,26 +37,27 @@ class Language(models.Model):
 class Submit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
-    result = models.CharField(max_length=200, choices=result_lists)
-    language = models.ForeignKey(Language, on_delete=models.CASCADE)
+    result = models.CharField(max_length=200, choices=submit_result_list)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, limit_choices_to={'enable': True})
     submit_file = models.FileField(upload_to=submit_file_directory_upload)
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE, null=True, blank=True)
     submit_time = models.DateTimeField()
-
+    server = models.ForeignKey(JudgeServer, on_delete=models.CASCADE, limit_choices_to={'is_enabled': True})
+    output_path = models.CharField(max_length=200)
+    
     def __str__(self):
         return self.problem.title + ' by ' + self.user.username + ' for _sid '+str(self.pk)
    
 
 class TestcaseOutput(models.Model):
-    output_file = models.FileField(upload_to=testcase_output_directory_upload)
     test_case = models.ForeignKey(TestCase, on_delete=models.CASCADE)
     submit = models.ForeignKey(Submit, on_delete=models.CASCADE)
     result = models.CharField(max_length=200, choices=result_lists)                                       
-    execution_time = models.DecimalField(decimal_places=8, max_digits=12, default=0.00, validators=[MinValueValidator(Decimal('0.00'))])
-    memory_usage = models.DecimalField(decimal_places=8, max_digits=12, default=0.00, validators=[MinValueValidator(Decimal('0.00'))])
+    execution_time = models.DecimalField(decimal_places=8, max_digits=22, default=0.00, validators=[MinValueValidator(Decimal('0.00'))])
+    memory_usage = models.DecimalField(decimal_places=8, max_digits=22, default=0.00, validators=[MinValueValidator(Decimal('0.00'))])
 
     class Meta:
-        unique_together = ('test_case', 'output_file')
+        unique_together = ('test_case', 'submit')
 
     def __str__(self):
         return self.submit.__str__() + ' test case ' + self.test_case.name 
@@ -98,7 +94,6 @@ class ScorecacheJury(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     submission = models.PositiveSmallIntegerField(default=0)
     punish = models.PositiveSmallIntegerField(default=0)
-    # pending = models.PositiveSmallIntegerField(default=0)
     correct_submit_time = models.DateTimeField(null=True, blank=True)
     is_correct = models.BooleanField(default=False)
     judging = models.PositiveSmallIntegerField(default=0)

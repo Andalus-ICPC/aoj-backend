@@ -3,31 +3,89 @@
 {% block title%}Add Problem{% endblock %}
 {% block content %}  
 {% load static %} 
+
+<style>
+    .add-problem .card-header {
+        display: flex;
+        justify-content: space-between;
+        height: 4em;
+        width: 100%;
+        align-items: center;
+    }
+
+    .add-problem .card-header h1 {
+        margin: 0 !important;
+        font-weight: 400;
+
+    }
+
+    .add-problem .problem-form-group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f1f1f1 !important;
+        padding: 0.4em 1em;
+        border-radius: 0.2em;;
+    }    
+
+    .add-problem .problem-form-group h3 {
+        margin: 0 !important;
+        font-size: 1em;
+        font-weight: 400;
+        margin-right: 1em !important;
+        color: #333;
+    }
+
+    .add-problem .problem-form-group button {
+        font-size: 14px;
+        display: inline-block;
+        margin: 0;
+        position: unset !important;
+        border: none;
+        padding: 0.4em 1.8em !important;
+        background-color: #007bff;
+        border-radius: 0.2em;
+        color: #FFF;
+    }
+
+    .add-problem .problem-form-group form {
+        display: flex;
+    }
+
+    .add-problem .problem-form-group form input {
+        /* border: 0.1em solid #D1D1D1; */
+        margin-right: 0.8em;
+        padding: 0.6em;
+    }
+
+</style>
 <div style="margin-left: 5%;  margin-right: 5%;" >
-	
-    <div class="card">
+    <div class="card add-problem">
         <div class="card-header" style="font-size: 18px;"> 
-            <strong>ADD PROBLEM </strong> 
-            <ul class="object-tools" style="position: absolute;top: 60px; right: 15px;">
-                <li> 
-                    <form  method="POST" enctype="multipart/form-data" novalidate action="{% url 'add_problem_zip' %}">
-                     {% csrf_token %}
-                     {% for field in form1.visible_fields %}
-                         <strong>{{ 'Zip file format' }}</strong>
-                         {{ field }}
-                         {{ field.errors }}
-                     {% endfor %}
-                     <button type="submit" name="button" class="ur-btn" style="position: absolute;top: 4px; right: 0px;">Upload</button>
-                 </form>
-                    
-                </li>
-            </ul>
+            <h1>ADD PROBLEM </h1> 
+            <div class="problem-form-group">
+                <h3>Zip file format</h3>
+                <form  method="POST" enctype="multipart/form-data" novalidate action="{% url 'add_problem_zip' %}">
+                    {% csrf_token %}
+                    {% for field in form1.visible_fields %}
+                    <div class="field-group">
+                        <div class="input-field">
+                            {{ field }}
+                        </div>
+                        <div class="field-errors">
+                            {{ field.errors }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <button type="submit" name="button" class="ur-btn" style="position: absolute;top: 4px; right: 0px;">Upload</button>
+                </form>
+            </div>
         </div>
-            <form method="POST"  enctype="multipart/form-data" novalidate action="{% url 'add_problem' %}">
-                {% csrf_token %}
-                {% include 'horizontal_form.html' %}
-                <input type="submit" name="submit" value="save" style="margin: 0 0 30px 50%;">
-            </form>
+        <form method="POST"  enctype="multipart/form-data" novalidate action="{% url 'add_problem' %}">
+            {% csrf_token %}
+            {% include 'horizontal_form.html' %}
+            <input type="submit" name="submit" value="save" style="margin: 0 0 30px 50%;">
+        </form>
     </div>
 </div>
 {% endblock %}

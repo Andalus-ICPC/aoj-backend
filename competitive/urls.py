@@ -22,7 +22,7 @@ urlpatterns = [
     path('rejudge/submission-list/<int:contest_id>/', views.rejudge_submission_list, name='rejudge_submission_list'),
     path('rejudge/process/', views.ajax_rejudge, name='ajax_rejudge'),
     path('view-result/<int:contest_id>/', views.deactivate_contest_scoreboard, name='deactivate_contest_scoreboard'),
-    path('submit-editor/', views.public_submit_editor, name='public_submit_editor'),
+    path('submit-editor/', views.submit_editor, name='public_submit_editor'),
 ]
 
 

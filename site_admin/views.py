@@ -12,14 +12,15 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.db import IntegrityError
 from authentication.validators import email_validate
-import csv
+import csv, os
 from authentication.forms import PublicUserRegistrationForm, EditMyProfile,\
     CSVUserUpload, ChangePassword
 from .forms import AddUser, EditUserProfile
 from contest.models import Contest
 from contest.views import update_rank_score, refresh_contest_session_admin
 from contest.forms import EditContest
-from competitive.views import update_score_and_rank, judge
+from competitive.judge_background import judge_background
+from authentication.pagination import pagination, page_number_pagination
 # Create your views here
 
 
@@ -32,16 +33,47 @@ def site_view_user(request):
         role__short_name="jury", campus=request.user.campus).order_by('username')
     site_admin_user = User.objects.filter(
         role__short_name="site", campus=request.user.campus).order_by('username')
+    admin_user = User.objects.filter(
+        role__short_name="admin", campus=request.user.campus).order_by('username')
     public_user = User.objects.filter(
         role__short_name="public", campus=request.user.campus).order_by('username')
 
+
+    page_number = request.GET.get('page', 1)
+    role = request.GET.get('role', "contestant")
+    contestant_page_number = 1
+    jury_page_number = 1
+    public_page_number = 1
+    admin_page_number = 1
+    site_admin_page_number = 1
+
+    if role == 'contestant': contestant_page_number=page_number
+    elif role == 'jury': jury_page_number=page_number
+    elif role == 'admin': admin_page_number=page_number
+    elif role == 'public': public_page_number=page_number
+    elif role == 'site_admin': site_admin_page_number=page_number
+
+    contestant_user, contestant_paginator = page_number_pagination(request, contestant_user, contestant_page_number)
+    jury_user, jury_paginator = page_number_pagination(request, jury_user, jury_page_number)
+    public_user, public_paginator = page_number_pagination(request, public_user, public_page_number)
+    admin_user, admin_paginator = page_number_pagination(request, admin_user, admin_page_number)
+    site_admin_user, site_admin_paginator = page_number_pagination(request, site_admin_user, site_admin_page_number)
+
     context = {
         'contestant_user': contestant_user,
+        'admin_user': admin_user,
         'jury_user': jury_user,
-        'site_admin_user': site_admin_user,
         'public_user': public_user,
+        'site_admin_user': site_admin_user,
+        'contestant_paginator': contestant_paginator,
+        'admin_paginator': admin_paginator,
+        'jury_paginator': jury_paginator,
+        'public_paginator': public_paginator,
+        'site_admin_paginator': site_admin_paginator,
+        "role": role,
         'user': 'hover'
     }
+
     return render(request, 'site_user_list.html', context)
 
 
@@ -221,6 +253,9 @@ def generate_users_password_csv(request, total_users):
 @login_required
 @site_auth
 def generate_user_password(request, role_type):
+    role_list = ['contestant', 'public', 'site']
+    if not role_type in role_list:
+        return render('homepage')
     role = Role.objects.get(short_name=role_type)
     return render(request, 'site_generate_password.html', {'role': role})
 
@@ -228,6 +263,9 @@ def generate_user_password(request, role_type):
 @login_required
 @site_auth
 def generate_password_done(request, role_id):
+    role_list = ['contestant', 'public', 'site']
+    if not role_type in role_list:
+        return render('homepage')
     role = Role.objects.get(pk=role_id)
     chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
     total_users = []
@@ -251,7 +289,9 @@ def generate_password_done(request, role_id):
 def site_view_problem(request):
     refresh_contest_session_admin(request)  # refersh the contest session
     total_problems = Problem.objects.all().order_by('title')
-    return render(request, 'site_problem_list.html', {'problem': total_problems, 'pro': 'hover'})
+    total_problems, paginator = pagination(request, total_problems)
+    context = {'problem': total_problems, 'paginator': paginator, 'pro': 'hover'}
+    return render(request, 'site_problem_list.html', context)
 
 
 
@@ -274,7 +314,9 @@ def site_contest_list(request):
             contest.status = "end"
         else:
             contest.status = "deactivate"  
-    return render(request, 'site_contest_list.html', {'contest': total_contest, 'cont': 'hover'})
+    total_contest, paginator = pagination(request, total_contest)
+    context = {'contest': total_contest, 'paginator': paginator, 'cont': 'hover'}
+    return render(request, 'site_contest_list.html', context)
 
 
 @login_required
@@ -319,23 +361,30 @@ def site_contest_detail(request, contest_id):
         return render(request, 'site_edit_contest.html', {'form': form, "contest_id": contest.id, 'cont': 'hover'})
 
     else:
-        total_contest = Contest.objects.all().order_by('start_time').reverse()
-        now = timezone.now()
-        for each_contest in total_contest:
-            if each_contest.enable == False:
-                each_contest.status = "disable"
-            elif now < each_contest.active_time:
-                each_contest.status = "not active"
-            elif now < each_contest.start_time:
-                each_contest.status = "active"
-            elif each_contest.start_time <= now and now < each_contest.end_time:
-                each_contest.status = "on going"
-            elif each_contest.end_time <= now and now < each_contest.deactivate_time:
-                each_contest.status = "end"
-            else:
-                each_contest.status = "deactivate" 
+        problem = contest.problem.all()
+        user = contest.user.all()
         
-        return render(request, 'site_contest_detail.html', {'total_contest': total_contest,'this_contest': contest})
+        page_number = request.GET.get('page', 1)
+        page_type = request.GET.get('type', "problem")
+        problem_page_number = 1
+        user_page_number = 1
+
+
+        if page_type == 'problem': problem_page_number=page_number
+        elif page_type == 'user': user_page_number=page_number
+    
+        problem, problem_paginator = page_number_pagination(request, problem, problem_page_number, 10)
+        user, user_paginator = page_number_pagination(request, user, user_page_number, 10)
+
+        context = {
+            'contest': contest,
+            'problem': problem,
+            'user': user,
+            'problem_paginator': problem_paginator,
+            'user_paginator': user_paginator, 
+            'cont': 'hover'
+        }
+        return render(request, 'site_contest_detail.html', context)
 
 
 
@@ -356,8 +405,6 @@ def site_delete_contest_done(request, contest_id):
     messages.success(request, "The contest " +
                      contest.title + " was deleted successfully.")
     return redirect('site_contest_list')
-
-
 
 
 
@@ -382,38 +429,76 @@ def site_rejudge_contest_select(request):
             contest.status = "end"
         else:
             contest.status = "deactivate"
-    context = {'all_contest': all_contest, 'rejudge': 'hover'}
+    
+    all_contest, paginator = pagination(request, all_contest)
+    context = {'all_contest': all_contest, 'paginator': paginator, 'rejudge': 'hover'}
     return render(request, 'site_rejudge_select_contest.html', context)
 
 
 @login_required
 @site_auth_and_contest_exist
 def site_rejudge_submission_list(request, contest_id):
+    problem_id = request.GET.get('problem_id', 0)
+    result = request.GET.get('result', "All")
+
     refresh_contest_session_admin(request)  # refersh the contest session
     contest = Contest.objects.get(pk=contest_id)
+    
+    try:
+        problem_id = int(problem_id)
+    except ValueError:
+        return redirect('homepage')
 
-    submission_list = Submit.objects.filter(
+    if not problem_id == 0:
+        try:
+            problem_title = Problem.objects.get(pk=problem_id).title
+        except Problem.DoesNotExist:
+            problem_title = None
+    else:
+        problem_title = "All problems"
+        
+    all_submission = Submit.objects.filter(
         contest=contest).order_by('submit_time').reverse()
+    
     all_problems = set()
+    for submit in all_submission:
+        pro = (submit.problem.id, submit.problem.title)
+        all_problems.add(pro)
+    all_problems = sorted(all_problems, key=lambda x: x[1].lower())
+
+    submission_list = all_submission
+    if problem_id:
+        submission_list = submission_list.filter(problem_id=problem_id)
+
+    if not result == "All":
+        submission_list = submission_list.filter(result=result)
 
     start_time = contest.start_time
     for i in submission_list:
         i.contest_time = i.submit_time - start_time
-    for submit in submission_list:
-        pro = (submit.problem.id, submit.problem.title)
-        all_problems.add(pro)
-    all_problems = sorted(all_problems, key=lambda x: x[1].lower())
+    all_results = ['Correct', 'Wrong Answer', 'Judging', 'Time Limit Exceeded', 'Run Time Error',  
+                    'Compiler Error', 'Memory Limit Exceeded', 'No Output']
+    
+    submission_list, paginator = pagination(request, submission_list)
+
     context = {'submission_list': submission_list, "contest_title": contest.title,
-               'all_problems': all_problems, 'contest_id': contest.pk, 'rejudge': 'hover'}
+               'all_problems': all_problems, 'contest_id': contest_id, 'paginator': paginator,
+               'all_results': all_results, "selected_problem": problem_id, 
+               "problem_title": problem_title, 'selected_result': result, 'rejudge': 'hover'
+               }
     return render(request, 'site_rejudge_submission_list.html', context)
 
 
 @login_required
 @site_auth
 def site_rejudge_submission_filter(request):
-    refresh_contest_session_admin(request)  # refersh the contest session
-    problem_id = int(request.GET.get('problem_id'))
-    contest_id = int(request.GET.get('contest_id'))
+    try:
+        problem_id = int(request.GET.get('problem_id'))
+        contest_id = int(request.GET.get('contest_id'))
+    except ValueError:
+        return redirect('homepage')
+        
+    result = request.GET.get('result')
 
     try:
         contest = Contest.objects.get(pk=contest_id)
@@ -421,23 +506,40 @@ def site_rejudge_submission_filter(request):
             return redirect('homepage')
     except Contest.DoesNotExist:
         return redirect('homepage')
-    try:
-        problem_title = Problem.objects.get(pk=problem_id).title
-    except Problem.DoesNotExist:
-        problem_title = None
+
+    if not problem_id == 0:
+        try:
+            problem_title = Problem.objects.get(pk=problem_id).title
+        except Problem.DoesNotExist:
+            problem_title = None
+
     if problem_id == 0:
-        all_submissions = Submit.objects.filter(
-            contest_id=contest_id).order_by('submit_time').reverse()
-        problem_title = "All problems"
+        if result == "All":
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id).order_by('submit_time').reverse()
+        else:
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, result=result).order_by('submit_time').reverse()
+        problem_title = "All problems"    
     else:
-        all_submissions = Submit.objects.filter(
-            contest_id=contest_id, problem_id=problem_id).order_by('submit_time').reverse()
+        if result == "All":
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, problem_id=problem_id).order_by('submit_time').reverse()
+        else:
+            submission_list = Submit.objects.filter(
+                contest_id=contest_id, problem_id=problem_id, result=result).order_by('submit_time').reverse()
 
     start_time = contest.start_time
-    for i in all_submissions:
+    for i in submission_list:
         i.contest_time = i.submit_time - start_time
+    
+    submission_list, paginator = pagination(request, submission_list)
 
-    return render(request, 'site_rejudge_filter.html', {'submission_list': all_submissions, 'problem_title': problem_title, 'rejudge': 'hover'})
+    context = {'submission_list': submission_list, 'problem_title': problem_title,
+               'paginator': paginator, 'contest_title': contest.title, 
+               'selected_problem': problem_id, 'selected_result': result, 'rejudge': 'hover'}
+    
+    return render(request, 'site_rejudge_filter.html', context)
 
 
 @login_required
@@ -458,18 +560,20 @@ def site_ajax_rejudge(request):
     for submit_id in rejudge_submits:
         try:
             submit = Submit.objects.get(pk=submit_id)
-            try:
-                result = judge(file_name=submit.submit_file.path, problem=submit.problem,
-                       language=submit.language, submit=submit, rejudge=True)
-                submit.result = result
+            if submit.result == "Judging":
+                result_dict[submit_id] = "Judging *"
+                continue
+            if os.path.exists(submit.submit_file.path):
+                submit.result = "Judging"
                 submit.save()
-                update_score_and_rank(submit)
-            except ValueError:
+                judge_background.apply_async([submit.id, True])
+                result = submit.result
+            else:
                 result = "file not found"
         except Submit.DoesNotExist:
             result = "not submitted"
 
-        result_dict[submit_id] = submit.result
+        result_dict[submit_id] = result
     contest.last_update = timezone.now()
     contest.save()
     response_data = {'result': result_dict}
@@ -509,4 +613,8 @@ def site_multi_rejudge(request, problem_id, contest_id, user_id):
     for i in specific_submissions:
         i.contest_time = i.submit_time - start_time
 
-    return render(request, 'site_single_user_rejudge.html', {'submit': specific_submissions, 'contest_id': specific_submissions[0].contest.pk, 'rejudge': 'hover'})
+    specific_submissions, paginator = pagination(request, specific_submissions, 3)
+    context = {'submit': specific_submissions, 'paginator': paginator, 
+              'contest_id': specific_submissions[0].contest.pk, 'rejudge': 'hover'
+            }
+    return render(request, 'site_single_user_rejudge.html', context)

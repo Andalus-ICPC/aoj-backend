@@ -4,6 +4,9 @@
 <html lang="{{ LANGUAGE_CODE|default:'en-us' }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
 <head>
 <title>{% block title %}{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'files/bootstrap/css/bootstrap.css' %}"/>
+<script src="{% static 'files/bootstrap/js/bootstrap.js' %}" defer></script>
+
 <link rel="stylesheet" href="{% static 'assets/vendors/bootstrap/dist/css/bootstrap.min.css' %}"/>
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static 'admin/css/base.css' %}{% endblock %}">
 {% if not is_popup and is_nav_sidebar_enabled %}
@@ -77,11 +80,11 @@
     {% if not is_popup %}
     <!-- Header -->
     <div id="header">
-        <div id="branding">
+      <div id="branding">
           {% block branding %}
-            <h1> {{ "Andalus" }}</h1>
+          <h1> {{ "Andalus Competitive Programming Judge" }}</h1>
           {% endblock %}
-        </div>
+      </div>
         {% block usertools %}
         <div class="" style="text-align: right;">
           {% comment %} <a href="{% url 'homepage' %}" class="header-item {{myicpc}}" style="text-decoration: none;">MyICPC</a> {% endcomment %}

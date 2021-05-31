@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+from dotenv import load_dotenv
 from django.contrib.messages import constants as messages
+load_dotenv()
 
 MESSAGE_LEVEL = messages.DEBUG
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -21,24 +23,20 @@ MEDIA_URL = '/media/'
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'rapiandelus@gmail.com'
-EMAIL_HOST_PASSWORD = '8andalus'
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER") 
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") 
 EMAIL_USE_TLS = True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '&%lwmqytwig2o10=6hdvz9s%8whm8ie4yjprs0ne38@sxc6-qx'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1', 'localhost', '10.240.68.56', '10.240.68.30', '192.168.0.62', 
-    '10.240.68.55', '192.168.43.158', '10.240.72.69', '10.42.0.1', '172.20.0.1',
-    '192.168.43.42'
-    ]
+ALLOWED_HOSTS = ['*']
 
 
 
@@ -54,6 +52,7 @@ INSTALLED_APPS = [
     'jury',
     'public',
     'judgeserver',
+    'site_admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,6 +63,7 @@ INSTALLED_APPS = [
     'datetimewidget',
     'crispy_forms',
     'django_ace',
+
 ]
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
@@ -109,12 +109,13 @@ DATABASES = {
     'default': {
 
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ethcpc2',
-        'USER': 'postgres',
-        'PASSWORD': 'andalus',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': os.environ.get("DB_NAME") ,
+        'USER': os.environ.get("DB_USER") ,
+        'PASSWORD': os.environ.get("DB_PASSWORD") ,
+        'HOST': os.environ.get("DB_HOST") ,
+        'PORT': os.environ.get("DB_PORT") ,
     }
+    
 }
 
 

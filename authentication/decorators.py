@@ -6,7 +6,7 @@ from competitive.models import Submit, Language
 from clarification.models import Clarification
 from django.utils import timezone
 from django.shortcuts import redirect
-
+from judgeserver.models import JudgeServer
 
 def admin_auth(function):
     def wrap(request, *args, **kwargs):
@@ -58,6 +58,22 @@ def admin_auth_and_contest_exist(function):
         try:
             Contest.objects.get(pk=kwargs['contest_id'])
         except Contest.DoesNotExist:
+            raise PermissionDenied
+        if request.user.role.short_name == 'admin':
+            return function(request, *args, **kwargs)
+        else:
+            # raise PermissionDenied
+            return redirect('homepage')
+    wrap.__doc__ = function.__doc__
+    wrap.__name__ = function.__name__
+    return wrap
+
+
+def admin_auth_and_server_exist(function):
+    def wrap(request, *args, **kwargs):
+        try:
+            JudgeServer.objects.get(pk=kwargs['judgeserver_id'])
+        except JudgeServer.DoesNotExist:
             raise PermissionDenied
         if request.user.role.short_name == 'admin':
             return function(request, *args, **kwargs)

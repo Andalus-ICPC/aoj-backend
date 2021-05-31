@@ -21,6 +21,8 @@
             <td > <strong>Result: </strong></td>
             {% if submit.result == "Correct" %}
             <td style="color: green;"> {{submit.result}} </td>
+            {%elif submit.result == "Judging"%}
+                <td style="color:rgb(161, 16, 161);">{{i.result}}</td>
             {% else %}
             <td style="color: red;"> {{submit.result}} </td>
             {% endif %}
@@ -85,7 +87,7 @@
 
 <div class="col-md-10" style="margin-left: 5%; margin-top:200px; margin-bottom: 100px;">
     <div class="tab">
-        {% for id, result, answer, input_file, output_file, user_output_file, time in submit_detail %}
+        {% for id, result, answer, input_file, output_file, user_output_file, time, memory in submit_detail %}
         {% if result == "Correct" %}
         <button class="tablinks" onclick="openTestacse(event, '{{id}}')" title="correct"> <img
                 src="{% static 'Images/icons/Ok.png' %}" height="30" width="30"></button>
@@ -100,7 +102,7 @@
     </div>
 
 
-    {% for id, result, answer, input_file, output_file, user_output_file, time in submit_detail %}
+    {% for id, result, answer, input_file, output_file, user_output_file, time, memory in submit_detail %}
     <div id="tab-{{id}}" class="tabcontent">
         <div class="tab">
             {% if result == "Correct" %}
@@ -111,7 +113,10 @@
             {% if not result == "Not Run" %}
             {% if not time == 0 %}
             <label style="margin-left:3%;"><strong>Execution time:&nbsp;&nbsp;&nbsp;</strong> </label><label>
-                {{time}} </label>
+                {{time}}s </label>
+            <label style="margin-left:3%;"><strong>Memory Usage:&nbsp;&nbsp;&nbsp;</strong> </label><label>
+                {{memory}}b </label>
+
             {% endif %}
 
             <label style="margin-left:3%;"><strong>testcase input:&nbsp;&nbsp;&nbsp;&nbsp;</strong></label><a

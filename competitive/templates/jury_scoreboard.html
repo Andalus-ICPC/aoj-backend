@@ -93,8 +93,11 @@
                         <td style="background-color:#F67B51 ; height:20px; width:120px; font-size:14px;"> 
                             <strong>tried, incorrect</strong>
                         </td>
+                        <td style="background-color:#A110A1 ; height:20px; width:120px; font-size:14px;"> 
+                            <strong>judging</strong>
+                        </td>
                     </tr>
-
+                    
                 </table>
             </div>
     
@@ -124,6 +127,7 @@
         function cellClick(user_id, problem_id, contest_id){
             $.ajax({ 
                 url:"{% url 'specific_problem_submission' %}",
+                type: "GET",
                 data:{
                     'problem_id': problem_id,
                     'user_id': user_id,

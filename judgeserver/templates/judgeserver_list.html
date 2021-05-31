@@ -27,7 +27,7 @@
 
             <th><strong>Status</strong></th>
             <th><strong>Enabled</strong></th>
-            <th><strong>Dump</strong></th>
+            <th><strong></strong></th>
             
 
          </tr>
@@ -50,11 +50,11 @@
          <td>{{judgeserver.server_memory_usage}}</td>
          <td>{{judgeserver.command_runner_version}}</td>
          <td>{{judgeserver.load}}</td>
-         {% if judgeserver.status == "normal" %}
+         {% if judgeserver.status == "Normal" %}
          <td style="color:green;">
             {{judgeserver.status}}
          </td>
-         {% elif judgeserver.status == "abnormal" %}
+         {% elif judgeserver.status == "Abnormal" %}
          <td style="color:red;">
             {{judgeserver.status}}
          </td>
@@ -68,10 +68,13 @@
             {{judgeserver.is_enabled}}
          </td>
          {% endif %}
-         <td>
-         <a class="btn btn-danger" href="{% url 'dump_judgeserver' judgeserver.id  %}"
-            style="margin-left:15px;color:#fff;">dump</a>
-         </td>
+         {%if judgeserver.dump %}
+            <td><a class="btn btn-danger" href="{% url 'dump_judgeserver' judgeserver.id  %}"
+               style="margin-left:15px;color:#fff;">dump</a>
+            </td>
+         {% else %}
+            <td></td>
+         {% endif %}
       </tr>
 
       {% endfor %}

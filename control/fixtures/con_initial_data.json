@@ -4,7 +4,8 @@
         "pk": 1,
         "fields": {
             "name": "punish time",
-            "value": 20
+            "value": 20,
+            "help": "punish time for incorrect submissions except compiler error in scoreboard"
         }
     },
     {
@@ -12,7 +13,8 @@
         "pk": 2,
         "fields": {
             "name": "rating correct value",
-            "value": 20
+            "value": 20,
+            "help": "added values for correct submissions in rating"
         }
     },
     {
@@ -20,7 +22,17 @@
         "pk": 3,
         "fields": {
             "name": "rating punish value",
-            "value": 1
+            "value": 1,
+            "help": "punish values for incorrect submissions in rating"
+        }
+    },
+    {
+        "model": "control.Setting",
+        "pk": 4,
+        "fields": {
+            "name": "source code size",
+            "value": 256,
+            "help": "maximum source code size in kilo byte"
         }
     }
 ]

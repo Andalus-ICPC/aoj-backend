@@ -5,6 +5,8 @@
 {% load static %} 
 {% load js %} 
 
+<link href="{% static 'assets/css/style.css' %}" rel="stylesheet"  type="text/css" />
+
 <style>
     .dropzone .dz-clickable {
         display: flex;
@@ -80,7 +82,7 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
-        margin-bottom: 2.4em;
+        margin-bottom: 0.4em;
         /* width: 100%; */
     }
     .cu-submit-btn {
@@ -123,7 +125,7 @@
     .file-upload {
         background-color: #EFEFEF;
         padding: 1.6em 2em;
-        margin-bottom: 2em;
+        margin-bottom: 1em;
         border-radius: 0.4em;
     }
 
@@ -164,8 +166,77 @@
 
 <div class="wrapper-2">
 
-    {% if request.session.start_contest_contestant %}
+{% if request.session.start_contest_contestant %}
+    <!-- ##################### -->
+    <div class="scoreboard" style="margin-left:0; margin-bottom: 3em;">
+        <table style="border-collapse: separate;">
+            <tr >
+                <thead>
+                    <th class="th bottom right">RANK </th>
+                    <th class="th bottom right">TEAM</th>
+                    <th class="th bottom right score">∑</th>
+                    <th class="th bottom right score">PEN</th>
+                    {% for i in total_problems%}
+                        <th class="th bottom score">
+                            <a href="{{i.pdf.url}}"> {{i.short_name}} <span style="height: 15px; width: 15px; background-color: {{i.ballon}}; 
+                                border-radius: 50%; display: inline-block;"></span> </a> </th>
+                    {%endfor%}
+                
+                </thead>
+            </tr>
+            {% if self_scoreboard%}
+                {% for rank, point, punish_time, teamname, univname, flag, cell_data in self_scoreboard %}
+                <tr>
+                    <tbody>                               
+                        <td class="td right"> {{rank}} </td>
+                        <td class="td right team">
+                            <img src="{% static flag %}">
+                            <div id="teamname"> {{teamname}} </div>
+                            <div id="univname"> {{univname}}</div>
+                        </td>
+                        <td class="td right score">{{point}}</td>
+                        <td class="td right score">{{punish_time}}</td>
+                        {% for try, time, color, prob_id in cell_data %}
+                            {% if not color == '#ffffff' %}
+                                <td class="td score" style="background-color: {{ color }};">
+                                    
+                                {% if not time == -1 %}
+                                    <div id="time" > {{ time }} </div>
+                                {% endif %}
+                                {% if try == 1 %}
+                                    <div id="try"> {{ try }} try </div> </td>
+                                {% elif not try == 0 %}
+                                    <div id="try"> {{ try }} tries </div> </td>
+                                {% endif %}
+                            {% else %}
+                            <td class="td score"> <div id="time" > </div><div id="try">  </div> </td>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </tr>
+                {% endfor %}
+            {% endif %}
+        </table>
+    </div>
+    <!-- ##################### -->
+    {% if form.non_field_errors %}
+        <table class="form-error">
+            {% for error in form.non_field_errors%}
+            <tr><td><b> {{ error}}</b></td></tr>
+            {% endfor %}
+        </table>
+        <br>
+    {% endif %}  
+    {% if form1.non_field_errors %}
+        <table class="form-error">
+            {% for error in form1.non_field_errors%}
+            <tr><td><b> {{ error}}</b></td></tr>
+            {% endfor %}
+        </table>
+        <br>
+    {% endif %}  
     <div class="file-upload">
+        
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="cu-form-group">
@@ -182,7 +253,7 @@
 
     <!---------------------------------------------->
     <div class="editor-nav">
-        <button type="button" id="editor-btn" class="cu-btn">Open editor</button>
+        <button type="button" id="editor-btn" class="cu-btn"style="width: 12em;" >Open editor</button>
         <select id="editor-theme" name="editor-theme">
             <option value="chrome">Chrome</option>
             <option value="dracula">Dracula</option>
@@ -286,7 +357,7 @@
     </div>
     {% endif %}
     <div class="content">
-        {% if all_current_contest_submits %}
+    {% if all_current_contest_submits %}
         <table class="table" >
             <thead class="thead-dark">
                 <tr>
@@ -300,44 +371,85 @@
             </thead>
             
         {% for i in all_current_contest_submits %}                
-                <tr class = "submission" data-js="open{{forloop.counter}}">
-                    <td class="id" >{{i.id}}</td> {% comment %} {{forloop.counter}} {% endcomment %}
-                    <td>{{i.contest_time}}</td>
-                    <td>{{i.submit_time}}</td>
-                    <td>{{i.problem.short_name}}</td>
-                    <td>{{i.language}}</td>
-                    {%if i.result == "Correct"%}
-                    <td style="color:green;">{{i.result}}</td>
-                    {%elif i.result == 'Too Late'%}
-                    <td style="color:gray;">{{i.result}}</td>
-                    {%else%}
-                    <td style="color:red;">{{i.result}}</td>
-                    {%endif%}
-                </tr>
-                
-                <div class="popup{{forloop.counter}}">
-                    <div class="ur-card">
-                       <div class="submitted-code-{{ i.id }}">
-                            {% comment %} <div>
-                                <p>Explanation</p>
-                                <textarea cols="48" rows="5">Hello world</textarea>
-                            </div> {% endcomment %}
-                            <p>Source Code</p>
+            <tr class = "submission" data-js="open{{forloop.counter}}">
+                <td class="id" >{{i.id}}</td> {% comment %} {{forloop.counter}} {% endcomment %}
+                <td>{{i.contest_time}}</td>
+                <td>{{i.submit_time}}</td>
+                <td>{{i.problem.short_name}}</td>
+                <td>{{i.language}}</td>
+                {%if i.result == "Correct"%}
+                <td style="color:green;">{{i.result}}</td>
+                {%elif i.result == "Judging"%}
+                <td style="color:rgb(161, 16, 161);">{{i.result}}</td>
+                {%elif i.result == 'Too Late'%}
+                <td style="color:gray;">{{i.result}}</td>
+                {%else%}
+                <td style="color:red;">{{i.result}}</td>
+                {%endif%}
+            </tr>
+            
+            <div class="popup{{forloop.counter}}">
+                <div class="ur-card">
+                    <div class="submitted-code-{{ i.id }}">
+                        {% comment %} <div>
+                            <p>Explanation</p>
+                            <textarea cols="48" rows="5"></textarea>
+                        </div> {% endcomment %}
+                        <p>Source Code</p>
 
-                            <div id="editor-{{i.id}}" class="source-code-editor"><pre><code>{{ i.source_code}}</code></pre></div>
-                            {% comment %} <button name="close" >close</button> {% endcomment %}
-                        </div>
-                        <script type="text/javascript"> 
-                            var language_mode = '{{i.language_mode}}';
-                            var editor = ace.edit("editor-{{i.id}}");
-                            editor.setTheme("ace/theme/monokai");
-                            editor.session.setMode("ace/mode/" + language_mode);
-                        </script>
+                        <div id="editor-{{i.id}}" class="source-code-editor"><pre><code>{{ i.source_code}}</code></pre></div>
+                        {% comment %} <button name="close" >close</button> {% endcomment %}
                     </div>
+                    <script type="text/javascript"> 
+                        var language_mode = '{{i.language_mode}}';
+                        var editor = ace.edit("editor-{{i.id}}");
+                        editor.setTheme("ace/theme/monokai");
+                        editor.session.setMode("ace/mode/" + language_mode);
+                    </script>
                 </div>
+            </div>
         {%endfor%}
         </table>
+
+    {% endif %}
+    
+        <!-- pagination -->
+        {% if all_current_contest_submits.has_other_pages %}
+            {% load proper_paginate %}
+            {% load url_replace %}
+            <ul class="pagination">
+                {% if all_current_contest_submits.number == 1 %}
+                    <li class="disabled"><span>⇤</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+                {% endif %}
+                {% if all_current_contest_submits.has_previous %}
+                    
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_current_contest_submits.previous_page_number %}">&laquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                {% endif %}
+                {% for i in paginator|proper_paginate:all_current_contest_submits.number%}
+                    {% if all_current_contest_submits.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                    {% else %}
+                        <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if all_current_contest_submits.has_next %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' all_current_contest_submits.next_page_number %}">&raquo;</a></li>
+                {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                {% endif %}
+                {% if all_current_contest_submits.number == paginator.num_pages %}
+                    <li class="disabled"><span>⇥</span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+                {% endif %}
+            </ul>
         {% endif %}
+        <!-- end pagination -->
+
     </div>
 
     <script>
@@ -366,7 +478,7 @@
             var extension = file.split('\\').slice(-1)[0].split('.')[1];
             var file_name = file.split('\\').slice(-1)[0].split('.')[0].toLowerCase();
 
-            // console.log(name, extension);
+            // console.log(extension, file_name);
             
             if(!langage_selector){
                 var url = "{% url 'ajax_get_language_list' %}";

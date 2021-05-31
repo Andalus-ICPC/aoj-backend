@@ -52,8 +52,45 @@
         <tr>
         <td> </td>
         <td ><a href="{% url 'public_user_submission'  %}" style="text-decoration: none; color:green;"><strong>Public User Submissions</strong></a></td>
-        </tr>
+        <td></td><td></td><td></td><td></td></tr>
     </table>
+
+    <!-- pagination -->
+    {% if all_contest.has_other_pages %}
+        {% load proper_paginate %}
+        {% load url_replace %}
+        <ul class="pagination">
+            {% if all_contest.number == 1 %}
+                <li class="disabled"><span>⇤</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' 1 %}">⇤</a></li>
+            {% endif %}
+            {% if all_contest.has_previous %}
+                
+                <li><a class="page-link" href="?{% url_replace request 'page' all_contest.previous_page_number %}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in paginator|proper_paginate:all_contest.number%}
+                {% if all_contest.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if all_contest.has_next %}
+                <li><a class="page-link" href="?{% url_replace request 'page' all_contest.next_page_number %}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+            {% if all_contest.number == paginator.num_pages %}
+                <li class="disabled"><span>⇥</span></li>
+            {% else %}
+                <li><a class="page-link" href="?{% url_replace request 'page' paginator.num_pages %}">⇥</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    <!-- end pagination -->
 
 </div>
 

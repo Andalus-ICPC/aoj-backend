@@ -49,13 +49,37 @@
     },
     
     {
-       "model": "authentication.Campus",
+        "model": "authentication.Campus",
         "pk": 1,
         "fields": {
             "name": "Adama Science and Technology University",
             "short_name": "ASTU",
             "logo": "astu.jpeg",
             "country": "Ethiopia"
+        }
+    },
+
+    {
+        "model": "authentication.User",
+        "pk": 1,
+        "fields": {
+            "username": "super",
+            "email": "super@andalus.com",
+            "password": "pbkdf2_sha256$100000$pN64VXjXqOHo$lNrNw6DbmeUpnZA/dJoXcOPfgLPvAbDY63Jdrtc6z6I=",
+            "role_id": 1,
+            "campus_id": 1
+        }
+    },
+
+    {
+        "model": "authentication.User",
+        "pk": 2,
+        "fields": {
+            "username": "admin",
+            "email": "admin@andalus.com",
+            "password": "pbkdf2_sha256$100000$qWpzQZeyVf44$U4pOlbh26faukqaACzhCL62Rhp5mC+bdwPlUFEA42aA=",
+            "role_id": 2,
+            "campus_id": 1
         }
     }
     

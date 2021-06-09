@@ -115,7 +115,7 @@ touch .env
 Then open the `.env` file and change the following variables by your database configurations.
 
 ```
-SECRET_KEY = "[&%lwmqytwig2o10=6hdvz9s%8whm8ie4yjprs0ne38@sxc6-qx]"
+SECRET_KEY = "&%lwmqytwig2o10=6hdvz9s%8whm8ie4yjprs0ne38@sxc6-qx"
 EMAIL_HOST_USER = "email"
 EMAIL_HOST_PASSWORD = "password"
 DB_NAME = "database_name"
@@ -123,6 +123,16 @@ DB_USER = "database_username"
 DB_PASSWORD = "database_password"
 DB_HOST = "host_address"
 DB_PORT = "host_port"
+```
+
+Now, run migrate to create the model tables in your database
+
+```sh
+cd aoj-backend
+```
+
+```sh
+python manage.py migrate
 ```
 
 ##### Step 6: Finally run everything :thumbsup: :rocket:
@@ -142,4 +152,18 @@ bash django
 
 ```sh
 bash redis
+```
+
+Default accounts for database admin and adminstrative user are 
+
+For database admin
+```sh
+email: super@andalus.com
+password: super1
+```
+
+For administrative user
+```sh
+email: admin@andalus.com
+password: admin1
 ```

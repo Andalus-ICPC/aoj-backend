@@ -154,7 +154,7 @@ bash django
 bash redis
 ```
 
-Default accounts for database admin and adminstrative user are 
+Default account for database admin and adminstrative user is
 
 For database admin
 ```sh

@@ -47,7 +47,7 @@ This will create a vritual environment named `env` inside `aoj-backend`
 Activate the virtual environment
 For linux
 ```sh
-source /env/bin/activate
+source env/bin/activate
 ```
 
 Then install all the requirements

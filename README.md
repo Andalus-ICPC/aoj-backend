@@ -7,7 +7,6 @@ Before any installation make sure you have the latest version of Python 3 instal
 But if you don't have a virtual environment install it using the following command first.
 
 Mainly the OS on your machine should be a linux based OS. This means all the following commands are not guaranteed to work on Windows machine.
-
 ```sh
 pip install virtualenv
 ```
@@ -60,6 +59,11 @@ pip3 install -r requirements.txt
 ```
 
 - For redis
+
+Install redis-server, try the following comand
+```sh
+sudo apt-get install redis-server
+```
 
 ```sh
 cd redis

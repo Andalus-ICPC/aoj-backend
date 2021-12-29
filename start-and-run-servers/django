@@ -1,1 +1,1 @@
-source /home/andalus/Documents/django/Andalus-Judge-Repo/aoj-backend/env/bin/activate && python /home/andalus/Documents/django/Andalus-Judge-Repo/aoj-backend/manage.py runserver 0:8000
+source /home/andalus/Documents/Andalus-Judge/aoj-backend/env/bin/activate && python /home/andalus/Documents/Andalus-Judge/aoj-backend/manage.py runserver 0:8000

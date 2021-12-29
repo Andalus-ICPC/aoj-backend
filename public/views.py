@@ -210,7 +210,7 @@ def submit_specific_problem(request, problem_id):
     form1.fields['language'].choices = [(None, '----------')]  + [(i.id, i) for i in Language.objects.filter(enable=True)]
 
     all_submits, paginator = pagination(request, all_submits)
-    context = {'form': form, 'form1': form1, 'all_submits': all_submits, "paginator": paginator, 'submit': 'hover'}
+    context = {'form': form, 'form1': form1, 'all_submits': all_submits, 'problem': problem, "paginator": paginator, 'submit': 'hover'}
     
     return render(request, 'public_specific_problem_submit.html', context)
 

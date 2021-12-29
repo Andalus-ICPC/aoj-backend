@@ -25,6 +25,7 @@ import datetime
 import math
 import json
 import subprocess
+import re
 import sys
 from threading import Timer
 import multiprocessing
@@ -137,10 +138,28 @@ def read_from_file(files):
 
 
 def java_class_name_find(source, path):
+    main_function_patter = r'(\s)*(public|static)(\s)+(public|static)(\s)+void(\s)+main(\s)*\('
+    class_name_patter = r'(?s:.*)(\s)*class(\s)*(?P<class_name>[a-zA-Z_][a-zA-Z0-9_]*)'
 
+    found = re.search(main_function_patter, source)
+    if found is None:
+        return path
+
+    last_pos = found.end()
+    text = source[:last_pos]
+
+    class_params = re.search(class_name_patter, text)
+    if class_params is None:
+        return path
+    
+    class_name = f"{class_params.group('class_name')}.java"
+    return class_name
+
+    '''
     ind  = source.find('public static void main')
     if ind == -1:
         return path
+
 
     text = source[:ind]
     ind  = text.rfind('class')
@@ -159,7 +178,7 @@ def java_class_name_find(source, path):
     if not class_name:
         return path
     return class_name+'.java'
-
+    '''
 
 def rank_update(submit):
     if not submit.user.role.short_name == "contestant":

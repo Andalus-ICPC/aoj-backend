@@ -1,2 +1,2 @@
-source /home/andalus/Documents/django/Andalus-Judge-Repo/aoj-backend/env/bin/activate
-/home/andalus/Documents/django/Andalus-Judge-Repo/redis-6.2.1/src/redis-server
+source /home/andalus/Documents/Andalus-Judge/aoj-backend/env/bin/activate
+/home/andalus/Documents/Andalus-Judge/redis-6.2.1/src/redis-server

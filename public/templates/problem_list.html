@@ -56,7 +56,7 @@
                 <td> {{i.user_ratio}}% </td>
                 <td> {{i.difficulty}} </td>
                 <td >
-                    <a  title="submit" href="{% url 'submit_specific_problem' i.problem.id %}"> <img src="{% static 'Images/icons/submit-progress.png' %}" height="15" width="15"></a> 
+                    <a  title="submit" href="{% url 'submit_specific_problem' problem_id=i.problem.id %}"> <img src="{% static 'Images/icons/submit-progress.png' %}" height="15" width="15"></a> 
                 </td>
                 
             </tr>

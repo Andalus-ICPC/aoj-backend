@@ -1,2 +1,2 @@
-source /home/andalus/Documents/django/Andalus-Judge-Repo/aoj-backend/env/bin/activate && cd /home/andalus/Documents/django/Andalus-Judge-Repo/aoj-backend && celery -A AOJ worker -l INFO --concurrency=10
+source /home/andalus/Documents/Andalus-Judge/aoj-backend/env/bin/activate && cd /home/andalus/Documents/Andalus-Judge/aoj-backend && celery -A AOJ worker -l INFO --concurrency=10
 

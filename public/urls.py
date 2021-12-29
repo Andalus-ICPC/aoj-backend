@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 
+
 urlpatterns = [
     path('problem/', views.public_problem_list, name='public_problem'),
     path('submit/', views.public_submit, name='public_submit'),

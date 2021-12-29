@@ -5,7 +5,7 @@ from django.forms.widgets import TextInput
 class AddProblem(forms.ModelForm):
     class Meta:
         model = Problem
-        fields = ['title', 'short_name', 'pdf', 'time_limit', 'memory_limit', 'point', 'ballon', 'error', 'is_public']
+        fields = ['title', 'short_name', 'pdf', 'time_limit', 'memory_limit', 'point', 'max_output_size', 'ballon', 'error', 'is_public']
         help_texts = {
             'title': "* Enter title of problem",
             'short_name': "* Enter short name of problem it must be less than 11 characters",
@@ -38,7 +38,7 @@ class EditProblem(forms.ModelForm):
 
     class Meta:
         model = Problem
-        fields = ['title', 'short_name', 'time_limit', 'memory_limit', 'pdf', 'point', 'ballon', 'error', 'is_public']
+        fields = ['title', 'short_name', 'time_limit', 'memory_limit', 'pdf', 'point', 'max_output_size', 'ballon', 'error', 'is_public']
         help_texts = {
             'title': "* Enter title of problem",
             'short_name': "* Enter short name of problem it must be less than 11 characters",

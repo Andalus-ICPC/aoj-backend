@@ -652,7 +652,8 @@ def ranklists(request):
                 'country_ranklists': country_rank,
                 'user_paginator': user_paginator,
                 'university_paginator': university_paginator,
-                'country_paginator': country_paginator
+                'country_paginator': country_paginator,
+                'rank_type': rank_type,
                 }
 
     return render(request, 'ranklists.html', context)

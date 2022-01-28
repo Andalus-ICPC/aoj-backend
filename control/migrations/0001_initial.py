@@ -20,4 +20,10 @@ class Migration(migrations.Migration):
                 ('help', models.CharField(max_length=1000)),
             ],
         ),
+        migrations.AddField(
+            model_name='setting',
+            name='help',
+            field=models.CharField(default=' ', max_length=1000),
+            preserve_default=False,
+        ),
     ]
